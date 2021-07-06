@@ -31,6 +31,8 @@ namespace ThinkBase.Client
                 Query = "query ($name: String!){kGraphByName(name: $name){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value }}} edges {name value{lineage endId startId name inferred weight id}}}}}"
             };
             var model = await client.SendQueryAsync<KGraphResponse>(modelReq);
+            if (model.Errors != null && model.Errors.Count() > 0)
+                throw new Exception(model.Errors[0].Message);
             _model = model.Data.kGraphByName.model;
             _model.Init();
             return _model;
@@ -44,6 +46,8 @@ namespace ThinkBase.Client
                 Query = @"query ($name: String! $id: String!){getKnowledgeState(graphName: $name id: $id){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
             return resp.Data.getKnowledgeState;
         }
 
@@ -83,6 +87,8 @@ namespace ThinkBase.Client
                 Query = @"mutation ($ks: KnowledgeStateInput!){ createKnowledgeState(ks: $ks ){subjectId }}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
             return resp.Data.createKnowledgeState;
         }
 
