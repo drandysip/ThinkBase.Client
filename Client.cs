@@ -62,7 +62,7 @@ namespace ThinkBase.Client
             var obj = _model.ObjectsByExternalId[externalId];
             obj.properties.ForEach(a => a.value = "");
             ks.data.Add(obj.id, obj.properties);
-            var links = _model.Connections.Values.Where(a => a.startId == obj.id || a.endId == obj.id && a.inferred);
+            var links = _model.Connections.Values.Where(a => a.startId == obj.id && a.inferred);
             foreach(var c in links)
             {
                 ks.data.Add(c.id, new List<GraphAttribute> { new GraphAttribute { name = c.name, type = GraphAttribute.DataType.connection, confidence = c.weight, lineage = c.lineage, id = c.id, inferred = true } });
@@ -70,6 +70,11 @@ namespace ThinkBase.Client
             return ks;
         }
 
+        /// <summary>
+        /// Add a new Knowledge State to the Graph
+        /// </summary>
+        /// <param name="ks">The Knowledge State</param>
+        /// <returns>The Knowledge State Added</returns>
         public async Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks)
         {
             var req = new GraphQLHttpRequest()
@@ -79,6 +84,21 @@ namespace ThinkBase.Client
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             return resp.Data.createKnowledgeState;
+        }
+
+        /// <summary>
+        /// Removes all knowledge states for this graph
+        /// </summary>
+        /// <returns>The count of Knowledge States removed</returns>
+        public async Task<long> ClearAllKnowledgeStates()
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName },
+                Query = @"mutation ($name: String!){ deleteAllKnowledgeStates(name: $name)}"
+            };
+            var resp = await client.SendQueryAsync<DeleteAllKnowledgeStatesResponse>(req);
+            return resp.Data.deleteAllKnowledgeStates;
         }
     }
 }
