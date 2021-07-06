@@ -88,7 +88,7 @@ namespace ThinkBase.Client
             }
             var req = new GraphQLHttpRequest()
             {
-                Variables = new { ksi },
+                Variables = new { ks = ksi },
                 Query = @"mutation ($ks: KnowledgeStateInput!){ createKnowledgeState(ks: $ks ){subjectId }}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);

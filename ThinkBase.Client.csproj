@@ -7,7 +7,7 @@
     <Description>A simple client for the Darl.dev GraphQL interface that permits you to access ThinkBase models programmatically.</Description>
     <RepositoryUrl>https://github.com/drandysip/ThinkBase.Client</RepositoryUrl>
     <PackageTags>knowledge graphs, AI</PackageTags>
-    <Version>1.0.6</Version>
+    <Version>1.0.7</Version>
   </PropertyGroup>
 
   <ItemGroup>
