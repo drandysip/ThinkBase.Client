@@ -13,6 +13,7 @@ namespace ThinkBase.Client
     {
         private string _graphName;
         private GraphQLHttpClient client;
+        private GraphModel _model;
 
         public Client(string authcode, string graphName)
         {
@@ -26,10 +27,12 @@ namespace ThinkBase.Client
             var modelReq = new GraphQLHttpRequest
             {
                 Variables = new { name = _graphName },
-                Query = "query ($name: String!){kGraphByName(name: $name){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value }}} edges {name value{lineage endId startId name inferred weight}}}}}"
+                Query = "query ($name: String!){kGraphByName(name: $name){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value }}} edges {name value{lineage endId startId name inferred weight id}}}}}"
             };
             var model = await client.SendQueryAsync<KGraphResponse>(modelReq);
-            return model.Data.kGraphByName.model;
+            _model = model.Data.kGraphByName.model;
+            _model.Init();
+            return _model;
         }
 
         public async Task<KnowledgeState> GetKnowledgeState(string subjectId)
@@ -37,10 +40,33 @@ namespace ThinkBase.Client
             var req = new GraphQLHttpRequest()
             {
                 Variables = new { name = _graphName, id = subjectId },
-                Query = @"($name: String! $id: String!){getKnowledgeState(graphName: $name id: $id){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                Query = @"query ($name: String! $id: String!){getKnowledgeState(graphName: $name id: $id){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             return resp.Data.getKnowledgeState;
+        }
+
+        /// <summary>
+        /// Creates a blank KS with the appropriate attributes and links ready to fill in.
+        /// </summary>
+        /// <param name="externalId"></param>
+        /// <returns>A blank KS.</returns>
+        public async Task<KnowledgeState> GetKnowledgeStateBlank(string externalId)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (!_model.ObjectsByExternalId.ContainsKey(externalId))
+                throw new ArgumentOutOfRangeException($"{externalId} not found in {_graphName}");
+            var ks = new KnowledgeState { knowledgeGraphName = _graphName, subjectId = Guid.NewGuid().ToString() };
+            var obj = _model.ObjectsByExternalId[externalId];
+            obj.properties.ForEach(a => a.value = "");
+            ks.data.Add(obj.id, obj.properties);
+            var links = _model.Connections.Values.Where(a => a.startId == obj.id || a.endId == obj.id && a.inferred);
+            foreach(var c in links)
+            {
+                ks.data.Add(c.id, new List<GraphAttribute> { new GraphAttribute { name = c.name, type = GraphAttribute.DataType.connection, confidence = c.weight, lineage = c.lineage, id = c.id, inferred = true } });
+            }
+            return ks;
         }
 
         public async Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks)

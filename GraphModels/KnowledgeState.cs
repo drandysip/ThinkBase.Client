@@ -8,6 +8,6 @@ namespace ThinkBase.Client.GraphModels
     {
         public string subjectId { get; set; }
         public string knowledgeGraphName { get; set; }
-         public Dictionary<string, List<GraphAttribute>> data { get; set; }
+        public Dictionary<string, List<GraphAttribute>> data { get; set; } = new Dictionary<string, List<GraphAttribute>>();
     }
 }
