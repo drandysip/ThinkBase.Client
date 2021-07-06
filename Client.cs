@@ -81,9 +81,14 @@ namespace ThinkBase.Client
         /// <returns>The Knowledge State Added</returns>
         public async Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks)
         {
+            var ksi = new KnowledgeStateInput { knowledgeGraphName = ks.knowledgeGraphName, subjectId = ks.subjectId };
+            foreach(var c in ks.data.Keys)
+            {
+                ksi.data.Add(new StringListGraphAttributePair { Name = c, Value = ks.data[c] });
+            }
             var req = new GraphQLHttpRequest()
             {
-                Variables = new { ks },
+                Variables = new { ksi },
                 Query = @"mutation ($ks: KnowledgeStateInput!){ createKnowledgeState(ks: $ks ){subjectId }}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
