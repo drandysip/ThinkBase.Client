@@ -18,7 +18,8 @@ namespace ThinkBase.Client
         public Client(string authcode, string graphName)
         {
             client = new GraphQLHttpClient("https://darl.dev/graphql/", new SystemTextJsonSerializer());
-            client.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authcode);
+            if(!string.IsNullOrEmpty(authcode))
+                client.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authcode);
             _graphName = graphName;
         }
 
