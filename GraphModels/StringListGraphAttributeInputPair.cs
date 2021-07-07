@@ -4,9 +4,9 @@ using System.Text;
 
 namespace ThinkBase.Client.GraphModels
 {
-    public class StringListGraphAttributePair
+    public class StringListGraphAttributeInputPair
     {
         public string Name { get; set; }
-        public List<GraphAttribute> Value { get; set; }
+        public List<GraphAttributeInput> Value { get; set; }
     }
 }

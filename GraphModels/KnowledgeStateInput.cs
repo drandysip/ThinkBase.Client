@@ -8,7 +8,7 @@ namespace ThinkBase.Client.GraphModels
     {
         public string subjectId { get; set; }
         public string knowledgeGraphName { get; set; }
-        public List<StringListGraphAttributePair> data { get; set; } = new List<StringListGraphAttributePair>();
+        public List<StringListGraphAttributeInputPair> data { get; set; } = new List<StringListGraphAttributeInputPair>();
 
     }
 }

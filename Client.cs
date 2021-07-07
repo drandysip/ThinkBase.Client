@@ -84,7 +84,12 @@ namespace ThinkBase.Client
             var ksi = new KnowledgeStateInput { knowledgeGraphName = ks.knowledgeGraphName, subjectId = ks.subjectId };
             foreach(var c in ks.data.Keys)
             {
-                ksi.data.Add(new StringListGraphAttributePair { Name = c, Value = ks.data[c] });
+                var l = new List<GraphAttributeInput>();
+                foreach(var p in ks.data[c])
+                {
+                    l.Add(new GraphAttributeInput { confidence = p.confidence, existence = p.existence, inferred = p.inferred, lineage = p.lineage, name = p.name, type = p.type, value = p.value });
+                }
+                ksi.data.Add(new StringListGraphAttributeInputPair { Name = c, Value =  l});
             }
             var req = new GraphQLHttpRequest()
             {
