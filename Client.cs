@@ -69,7 +69,8 @@ namespace ThinkBase.Client
             var links = _model.Connections.Values.Where(a => a.startId == obj.id && a.inferred);
             foreach(var c in links)
             {
-                ks.data.Add(c.id, new List<GraphAttribute> { new GraphAttribute { name = c.name, type = GraphAttribute.DataType.connection, confidence = c.weight, lineage = c.lineage, id = c.id, inferred = true } });
+                var id = _model.Objects[c.endId].name;
+                ks.data.Add(c.id, new List<GraphAttribute> { new GraphAttribute { name = c.name, type = GraphAttribute.DataType.connection, confidence = c.weight, lineage = c.lineage, id = id, inferred = true } });
             }
             return ks;
         }
@@ -94,7 +95,7 @@ namespace ThinkBase.Client
             var req = new GraphQLHttpRequest()
             {
                 Variables = new { ks = ksi },
-                Query = @"mutation ($ks: KnowledgeStateInput!){ createKnowledgeState(ks: $ks ){subjectId }}"
+                Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){subjectId }}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             if (resp.Errors != null && resp.Errors.Count() > 0)
