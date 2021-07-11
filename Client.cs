@@ -51,29 +51,6 @@ namespace ThinkBase.Client
             return resp.Data.getKnowledgeState;
         }
 
-        /// <summary>
-        /// Creates a blank KS with the appropriate attributes and links ready to fill in.
-        /// </summary>
-        /// <param name="externalId"></param>
-        /// <returns>A blank KS.</returns>
-        public async Task<KnowledgeState> GetKnowledgeStateBlank(string externalId)
-        {
-            if (_model == null)
-                await FetchModel();
-            if (!_model.ObjectsByExternalId.ContainsKey(externalId))
-                throw new ArgumentOutOfRangeException($"{externalId} not found in {_graphName}");
-            var ks = new KnowledgeState { knowledgeGraphName = _graphName, subjectId = Guid.NewGuid().ToString() };
-            var obj = _model.ObjectsByExternalId[externalId];
-            obj.properties.ForEach(a => a.value = "");
-            ks.data.Add(obj.id, obj.properties);
-            var links = _model.Connections.Values.Where(a => a.startId == obj.id && a.inferred);
-            foreach(var c in links)
-            {
-                var id = _model.Objects[c.endId].name;
-                ks.data.Add(c.id, new List<GraphAttribute> { new GraphAttribute { name = c.name, type = GraphAttribute.DataType.connection, confidence = c.weight, lineage = c.lineage, id = id, inferred = true } });
-            }
-            return ks;
-        }
 
         /// <summary>
         /// Add a new Knowledge State to the Graph
@@ -116,6 +93,68 @@ namespace ThinkBase.Client
             };
             var resp = await client.SendQueryAsync<DeleteAllKnowledgeStatesResponse>(req);
             return resp.Data.deleteAllKnowledgeStates;
+        }
+
+        public async Task SetDataValue(KnowledgeState ks, string nodeName, string attName, string value)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+                throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
+            ks.knowledgeGraphName = _graphName;
+            var obj = _model.ObjectsByExternalId[nodeName];
+            bool found = false;
+            foreach (var l in obj.properties)
+            {
+                if (l.name == attName)
+                {
+                    if(!ks.data.ContainsKey(obj.id))
+                    {
+                        ks.data.Add(obj.id, new List<GraphAttribute>());
+                    }
+                    var att = ks.data[obj.id].FirstOrDefault(a => a.name == attName);
+                    if (att == null)
+                    {
+                        ks.data[obj.id].Add(new GraphAttribute { value = value, type = l.type, lineage = l.lineage, confidence = l.confidence, id = Guid.NewGuid().ToString() });
+                    }
+                    else
+                    {
+                        att.value = value;
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                throw new ThinkBaseException($"Attribute {attName} not found. Schema change?");
+            }
+        }
+
+        public async Task SetConnectionPresence(KnowledgeState ks, string nodeName, string destName, string remoteSubjectId)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+                throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
+            if (!_model.ObjectsByExternalId.ContainsKey(destName))
+                throw new ArgumentOutOfRangeException($"{destName} not found in {_graphName}");
+            var remoteId = _model.ObjectsByExternalId[destName].id;
+            ks.knowledgeGraphName = _graphName;
+            var obj = _model.ObjectsByExternalId[nodeName];
+            var link = _model.Connections.Values.FirstOrDefault(a => a.startId == obj.id && a.inferred && a.endId == remoteId);
+            if(link != null)
+            {
+                if (!ks.data.ContainsKey(link.id))
+                {
+                    ks.data.Add(link.id, new List<GraphAttribute>());
+                }
+                ks.data[link.id].Add(new GraphAttribute { name = link.name, type = GraphAttribute.DataType.connection, confidence = link.weight, lineage = link.lineage, id = link.id, inferred = true, value = remoteSubjectId });
+            }
+            else
+            {
+                throw new ThinkBaseException($"Connection from {nodeName} to {destName} not found. Schema change?");
+            }
         }
     }
 }
