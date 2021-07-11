@@ -115,7 +115,7 @@ namespace ThinkBase.Client
                     var att = ks.data[obj.id].FirstOrDefault(a => a.name == attName);
                     if (att == null)
                     {
-                        ks.data[obj.id].Add(new GraphAttribute { value = value, type = l.type, lineage = l.lineage, confidence = l.confidence, id = Guid.NewGuid().ToString() });
+                        ks.data[obj.id].Add(new GraphAttribute { value = value, type = l.type, lineage = l.lineage, confidence = l.confidence, id = Guid.NewGuid().ToString(), name = l.name, inferred = true });
                     }
                     else
                     {
