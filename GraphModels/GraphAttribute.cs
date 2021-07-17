@@ -14,16 +14,16 @@ namespace ThinkBase.Client.GraphModels
 
         public enum DataType
         {
-            numeric = 0,
-            categorical = 1,
-            textual = 2,
-            sequence = 3,
-            temporal = 4,
-            duration = 5,
-            markdown = 6,
-            ruleset = 7,
-            link = 8,
-            connection = 9
+            NUMERIC = 0,
+            CATEGORICAL = 1,
+            TEXTUAL = 2,
+            SEQUENCE = 3,
+            TEMPORAL = 4,
+            DURATION = 5,
+            MARKDOWN = 6,
+            RULESET = 7,
+            LINK = 8,
+            CONNECTION = 9
         }
     }
 }

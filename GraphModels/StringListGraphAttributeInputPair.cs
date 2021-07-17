@@ -6,7 +6,7 @@ namespace ThinkBase.Client.GraphModels
 {
     public class StringListGraphAttributeInputPair
     {
-        public string Name { get; set; }
-        public List<GraphAttributeInput> Value { get; set; }
+        public string name { get; set; }
+        public List<GraphAttributeInput> value { get; set; }
     }
 }

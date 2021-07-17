@@ -6,7 +6,7 @@ namespace ThinkBase.Client.GraphModels
 {
     public class KnowledgeStateResponse
     {
-        public KnowledgeState getKnowledgeState { get; set; }
-        public KnowledgeState createKnowledgeState { get; set; }
+        public KnowledgeStateInput getKnowledgeState { get; set; }
+        public KnowledgeStateInput createKnowledgeState { get; set; }
     }
 }

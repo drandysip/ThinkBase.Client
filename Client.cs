@@ -1,5 +1,7 @@
 ﻿using GraphQL.Client.Http;
-using GraphQL.Client.Serializer.SystemTextJson;
+using GraphQL.Client.Serializer.Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +17,17 @@ namespace ThinkBase.Client
         private GraphQLHttpClient client;
         private GraphModel _model;
 
-        public Client(string authcode, string graphName)
+        ITraceWriter traceWriter = new MemoryTraceWriter();
+
+        public Client(string authcode, string graphName, string path = "https://darl.dev/graphql/")
         {
-            client = new GraphQLHttpClient("https://darl.dev/graphql/", new SystemTextJsonSerializer());
+            client = new GraphQLHttpClient(path, new NewtonsoftJsonSerializer(new JsonSerializerSettings
+            {
+                TraceWriter = traceWriter,
+                ContractResolver = new CamelCasePropertyNamesContractResolver { IgnoreIsSpecifiedMembers = true },
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                Converters = { new ConstantCaseEnumConverter() }
+            }));
             if(!string.IsNullOrEmpty(authcode))
                 client.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authcode);
             _graphName = graphName;
@@ -33,6 +43,8 @@ namespace ThinkBase.Client
             var model = await client.SendQueryAsync<KGraphResponse>(modelReq);
             if (model.Errors != null && model.Errors.Count() > 0)
                 throw new Exception(model.Errors[0].Message);
+            if(model.Data.kGraphByName == null)
+                throw new Exception($"{_graphName} is not present in this account.");
             _model = model.Data.kGraphByName.model;
             _model.Init();
             return _model;
@@ -48,7 +60,8 @@ namespace ThinkBase.Client
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             if (resp.Errors != null && resp.Errors.Count() > 0)
                 throw new Exception(resp.Errors[0].Message);
-            return resp.Data.getKnowledgeState;
+            var ksi =  resp.Data.getKnowledgeState;
+            return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = subjectId, data = ksi.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
         }
 
 
@@ -67,17 +80,18 @@ namespace ThinkBase.Client
                 {
                     l.Add(new GraphAttributeInput { confidence = p.confidence, existence = p.existence, inferred = p.inferred, lineage = p.lineage, name = p.name, type = p.type, value = p.value });
                 }
-                ksi.data.Add(new StringListGraphAttributeInputPair { Name = c, Value =  l});
+                ksi.data.Add(new StringListGraphAttributeInputPair { name = c, value =  l});
             }
             var req = new GraphQLHttpRequest()
             {
                 Variables = new { ks = ksi },
-                Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){subjectId }}"
+                Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             if (resp.Errors != null && resp.Errors.Count() > 0)
                 throw new Exception(resp.Errors[0].Message);
-            return resp.Data.createKnowledgeState;
+            var ksinew = resp.Data.createKnowledgeState;
+            return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = ksinew.subjectId, data = ksinew.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
         }
 
         /// <summary>
@@ -149,12 +163,43 @@ namespace ThinkBase.Client
                 {
                     ks.data.Add(link.id, new List<GraphAttribute>());
                 }
-                ks.data[link.id].Add(new GraphAttribute { name = link.name, type = GraphAttribute.DataType.connection, confidence = link.weight, lineage = link.lineage, id = link.id, inferred = true, value = remoteSubjectId });
+                ks.data[link.id].Add(new GraphAttribute { name = link.name, type = GraphAttribute.DataType.CONNECTION, confidence = link.weight, lineage = link.lineage, id = link.id, inferred = true, value = remoteSubjectId });
             }
             else
             {
                 throw new ThinkBaseException($"Connection from {nodeName} to {destName} not found. Schema change?");
             }
+        }
+
+        public static List<GraphAttribute> ConvertAttributeInputList(List<GraphAttributeInput> list)
+        {
+            var l = new List<GraphAttribute>();
+            foreach (var a in list)
+                l.Add(ConvertAttributeInput(a));
+            return l;
+        }
+
+        public static GraphAttribute ConvertAttributeInput(GraphAttributeInput a)
+        {
+            return new GraphAttribute { id = Guid.NewGuid().ToString(), confidence = a.confidence ?? 1.0, inferred = a.inferred ?? false, value = a.value, existence = a.existence, name = a.name, type = a.type, lineage = a.lineage };
+        }
+
+        public static List<GraphAttributeInput> ConvertAttributeInputList(List<GraphAttribute> list)
+        {
+            var l = new List<GraphAttributeInput>();
+            foreach (var a in list)
+                l.Add(ConvertAttributeInput(a));
+            return l;
+        }
+
+        public static GraphAttributeInput ConvertAttributeInput(GraphAttribute a)
+        {
+            return new GraphAttributeInput { confidence = a.confidence, inferred = a.inferred, value = a.value, existence = a.existence, name = a.name, type = a.type, lineage = a.lineage };
+        }
+
+        public override string ToString()
+        {
+            return traceWriter.ToString();
         }
     }
 }
