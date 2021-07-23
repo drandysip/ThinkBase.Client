@@ -61,13 +61,16 @@ namespace ThinkBase.Client
             if (resp.Errors != null && resp.Errors.Count() > 0)
                 throw new Exception(resp.Errors[0].Message);
             var ksi =  resp.Data.getKnowledgeState;
-            return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = subjectId, data = ksi.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
+            if(ksi != null)
+                return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = subjectId, data = ksi.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
+            return null;
         }
 
 
         /// <summary>
-        /// Add a new Knowledge State to the Graph
+        /// Add a new Knowledge State to the Graph or overwrite existing
         /// </summary>
+        /// <remarks>Deletes any existing KS with the same userId, Graph and subjectId.</remarks>
         /// <param name="ks">The Knowledge State</param>
         /// <returns>The Knowledge State Added</returns>
         public async Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks)
@@ -108,6 +111,7 @@ namespace ThinkBase.Client
             var resp = await client.SendQueryAsync<DeleteAllKnowledgeStatesResponse>(req);
             return resp.Data.deleteAllKnowledgeStates;
         }
+
 
         public async Task SetDataValue(KnowledgeState ks, string nodeName, string attName, string value)
         {
