@@ -4,7 +4,7 @@ This is a simple client for accessing, inferring from and creating ThinkBase mod
 ThinkBase is a Knowledge Graph inference engine.
 Read more about ThinkBase at [the documentation](https://darl.dev/docs#/).
 
-The most recent nuget package can be found [https://www.nuget.org/packages/ThinkBase.Client/](here).
+The most recent nuget package can be found [here](https://www.nuget.org/packages/ThinkBase.Client/).
 
 # Usage
 
