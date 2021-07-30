@@ -14,7 +14,7 @@ var client = new Client("<API key>", "graphName");
 var topLevelModel = await client.FetchModel();
 topLevelModel.Init();
 ```
-Create some knowledge states and link them. In this case "c" is a country object with name and id. 
+Create some knowledge states and link them. In this case "c" is a country object with name and id. "m" is a monarch with name and id and a link to a country ks via its subject ID.
 ```C#
 var countryKS = new KnowledgeState();
 await client.SetDataValue(countryKS, "country", "name", c.Name);
