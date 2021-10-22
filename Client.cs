@@ -16,6 +16,7 @@ namespace ThinkBase.Client
         private string _graphName;
         private GraphQLHttpClient client;
         private GraphModel _model;
+        private int batchLength { get; set; } = 10;
 
         ITraceWriter traceWriter = new MemoryTraceWriter();
 
@@ -33,6 +34,11 @@ namespace ThinkBase.Client
             _graphName = graphName;
         }
 
+
+        /// <summary>
+        /// Get a read-only version of the graph
+        /// </summary>
+        /// <returns></returns>
         public async Task<GraphModel> FetchModel()
         {
             var modelReq = new GraphQLHttpRequest
@@ -75,16 +81,7 @@ namespace ThinkBase.Client
         /// <returns>The Knowledge State Added</returns>
         public async Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks)
         {
-            var ksi = new KnowledgeStateInput { knowledgeGraphName = ks.knowledgeGraphName, subjectId = ks.subjectId };
-            foreach(var c in ks.data.Keys)
-            {
-                var l = new List<GraphAttributeInput>();
-                foreach(var p in ks.data[c])
-                {
-                    l.Add(new GraphAttributeInput { confidence = p.confidence, existence = p.existence, inferred = p.inferred, lineage = p.lineage, name = p.name, type = p.type, value = p.value });
-                }
-                ksi.data.Add(new StringListGraphAttributeInputPair { name = c, value =  l});
-            }
+            var ksi = ConvertKnowledgeState(ks);
             var req = new GraphQLHttpRequest()
             {
                 Variables = new { ks = ksi },
@@ -95,6 +92,41 @@ namespace ThinkBase.Client
                 throw new Exception(resp.Errors[0].Message);
             var ksinew = resp.Data.createKnowledgeState;
             return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = ksinew.subjectId, data = ksinew.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
+        }
+
+        /// <summary>
+        /// Add a list of Knowledge States to the graph or overwrite existing, using batching to increase performance.
+        /// </summary>
+        /// <param name="ks"></param>
+        /// <returns></returns>
+        public async Task<List<KnowledgeState>> CreateKnowledgeStateBatched(List<KnowledgeState> ksl)
+        {
+            bool complete = false;
+            int index = 0;
+            var ksis = new List<KnowledgeStateInput>();
+            var results = new List<KnowledgeState>();
+            while(!complete)
+            {
+                for(int n = 0; n < batchLength && n + index < ksl.Count; n++)
+                {
+                    ksis.Add(ConvertKnowledgeState(ksl[n + index]));
+                }
+                var req = new GraphQLHttpRequest()
+                {
+                    Variables = new { ks = ksis },
+                    Query = @"mutation ($ks: [knowledgeStateInput]!){ createKnowledgeStateList(ks: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                };
+                var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
+                if (resp.Errors != null && resp.Errors.Count() > 0)
+                    throw new Exception(resp.Errors[0].Message);
+                foreach(var r in resp.Data.createKnowledgeStateList)
+                {
+                    results.Add(new KnowledgeState { knowledgeGraphName = _graphName, subjectId = r.subjectId, data = r.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) });
+                }
+                index += batchLength;
+                complete = index >= ksl.Count;
+            }
+            return results;
         }
 
         /// <summary>
@@ -204,6 +236,34 @@ namespace ThinkBase.Client
         public override string ToString()
         {
             return traceWriter.ToString();
+        }
+
+        public async Task<string> ExportNodaModel()
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName},
+                Query = @"query ($name: String! ){exportNoda(graphName: $name)}"
+            };
+            var resp = await client.SendQueryAsync<ExportNodaResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            return resp.Data.exportNoda;
+        }
+
+        private KnowledgeStateInput ConvertKnowledgeState(KnowledgeState ks)
+        {
+            var ksi = new KnowledgeStateInput { knowledgeGraphName = ks.knowledgeGraphName, subjectId = ks.subjectId };
+            foreach (var c in ks.data.Keys)
+            {
+                var l = new List<GraphAttributeInput>();
+                foreach (var p in ks.data[c])
+                {
+                    l.Add(new GraphAttributeInput { confidence = p.confidence, existence = p.existence, inferred = p.inferred, lineage = p.lineage, name = p.name, type = p.type, value = p.value });
+                }
+                ksi.data.Add(new StringListGraphAttributeInputPair { name = c, value = l });
+            }
+            return ksi;
         }
     }
 }

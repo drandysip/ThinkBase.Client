@@ -8,5 +8,8 @@ namespace ThinkBase.Client.GraphModels
     {
         public KnowledgeStateInput getKnowledgeState { get; set; }
         public KnowledgeStateInput createKnowledgeState { get; set; }
+
+        public List<KnowledgeStateInput> createKnowledgeStateList { get; set; }
+
     }
 }
