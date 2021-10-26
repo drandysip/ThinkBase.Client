@@ -114,7 +114,7 @@ namespace ThinkBase.Client
                 var req = new GraphQLHttpRequest()
                 {
                     Variables = new { ks = ksis },
-                    Query = @"mutation ($ks: [knowledgeStateInput]!){ createKnowledgeStateList(ks: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                    Query = @"mutation ($ks: [knowledgeStateInput]!){ createKnowledgeStateList(ksl: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
                 };
                 var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
                 if (resp.Errors != null && resp.Errors.Count() > 0)
