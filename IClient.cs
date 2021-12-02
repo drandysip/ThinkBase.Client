@@ -11,11 +11,12 @@ namespace ThinkBase.Client
     {
         Task<long> ClearAllKnowledgeStates();
         Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks);
+        Task<List<KnowledgeState>> CreateKnowledgeStateBatched(List<KnowledgeState> ksl);
+        Task<String> ExportNodaModel();
         Task<GraphModel> FetchModel();
         Task<KnowledgeState> GetKnowledgeState(string subjectId);
         Task SetConnectionPresence(KnowledgeState ks, string nodeName, string destName, string remoteSubjectId);
         Task SetDataValue(KnowledgeState ks, string nodeName, string attName, string value);
-        Task<String> ExportNodaModel();
-        Task<List<KnowledgeState>> CreateKnowledgeStateBatched(List<KnowledgeState> ksl);
+        Task SetObjectExistence(KnowledgeState ks, string nodeName, List<DarlTime> existence);
     }
 }

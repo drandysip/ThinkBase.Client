@@ -5,6 +5,13 @@ using System.Text;
 
 namespace ThinkBase.Client.GraphModels
 {
+    /// <summary>
+    /// This is a read only version of the GraphModel stored in ThinkBase
+    /// </summary>
+    /// <remarks>
+    /// This is used to manage correct updates to the KnowledgeStates. 
+    /// Changes made here are not reflected in the stored GraphModel
+    /// </remarks>
     public class GraphModel
     {
         public List<StringGraphObjectPair> vertices { get; set; }

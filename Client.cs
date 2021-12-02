@@ -181,6 +181,25 @@ namespace ThinkBase.Client
             }
         }
 
+        public async Task SetObjectExistence(KnowledgeState ks, string nodeName, List<DarlTime> existence)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+                throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
+            ks.knowledgeGraphName = _graphName;
+            var obj = _model.ObjectsByExternalId[nodeName];
+            var att = obj.properties.FirstOrDefault(a => a.name == "existence");
+            if(att != null)
+            {
+                att.existence = existence;
+            }
+            else
+            {
+                obj.properties.Add(new GraphAttribute { value = String.Empty, type = GraphAttribute.DataType.TEMPORAL, lineage = "noun:01,5,03,3,018", confidence = 1.0, id = Guid.NewGuid().ToString(), name = "existence", inferred = false, existence = existence });
+            }
+        }
+
         public async Task SetConnectionPresence(KnowledgeState ks, string nodeName, string destName, string remoteSubjectId)
         {
             if (_model == null)
