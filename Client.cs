@@ -44,7 +44,7 @@ namespace ThinkBase.Client
             var modelReq = new GraphQLHttpRequest
             {
                 Variables = new { name = _graphName },
-                Query = "query ($name: String!){kGraphByName(name: $name){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value }}} edges {name value{lineage endId startId name inferred weight id}}}}}"
+                Query = "query ($name: String!){kGraphByName(name: $name){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value type existence {raw precision } } existence {raw precision }}} edges {name value{lineage endId startId name inferred weight id existence {raw precision }}}}}}"
             };
             var model = await client.SendQueryAsync<KGraphResponse>(modelReq);
             if (model.Errors != null && model.Errors.Count() > 0)
