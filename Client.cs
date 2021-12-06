@@ -78,15 +78,29 @@ namespace ThinkBase.Client
         /// </summary>
         /// <remarks>Deletes any existing KS with the same userId, Graph and subjectId.</remarks>
         /// <param name="ks">The Knowledge State</param>
+        /// <param name="asSystem">Perform as System - Admin level API keys only</param>
         /// <returns>The Knowledge State Added</returns>
-        public async Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks)
+        public async Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks, bool? asSystem)
         {
             var ksi = ConvertKnowledgeState(ks);
-            var req = new GraphQLHttpRequest()
+            GraphQLHttpRequest req;
+            if (asSystem ?? false)
             {
-                Variables = new { ks = ksi },
-                Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
-            };
+                req = new GraphQLHttpRequest()
+                {
+                    Variables = new { ks = ksi },
+                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks asSystem: true ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                };
+
+            }
+            else
+            {
+                req = new GraphQLHttpRequest()
+                {
+                    Variables = new { ks = ksi },
+                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                };
+            }
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             if (resp.Errors != null && resp.Errors.Count() > 0)
                 throw new Exception(resp.Errors[0].Message);
