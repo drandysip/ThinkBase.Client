@@ -210,7 +210,7 @@ namespace ThinkBase.Client
             }
             else
             {
-                obj.properties.Add(new GraphAttribute { value = String.Empty, type = GraphAttribute.DataType.TEMPORAL, lineage = "noun:01,5,03,3,018", confidence = 1.0, id = Guid.NewGuid().ToString(), name = "existence", inferred = false, existence = existence });
+                ks.data[obj.id].Add(new GraphAttribute { value = String.Empty, type = GraphAttribute.DataType.TEMPORAL, lineage = "noun:01,5,03,3,018", confidence = 1.0, id = Guid.NewGuid().ToString(), name = "existence", inferred = false, existence = existence });
             }
         }
 
