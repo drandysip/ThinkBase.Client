@@ -72,6 +72,29 @@ namespace ThinkBase.Client
             return null;
         }
 
+        public async Task<List<KnowledgeState>> GetChildKnowledgeStates(string parentId)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName, typeObjectId = parentId },
+                Query = @"query ($name: String! $id: String!){getKnowledgeStatesByType(graphName: $name typeObjectId: $typeObjectId){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+            };
+            var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            var ksi = resp.Data.getKnowledgeStatesByType;
+            var list = new List<KnowledgeState>();
+            if (ksi != null)
+            {
+                foreach(var k in ksi)
+                {
+                    list.Add(new KnowledgeState { knowledgeGraphName = _graphName, subjectId = k.subjectId, data = k.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) })
+                }
+            }
+            return list;
+        }
+    
+
 
         /// <summary>
         /// Add a new Knowledge State to the Graph or overwrite existing

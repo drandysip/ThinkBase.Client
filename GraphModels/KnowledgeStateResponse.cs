@@ -10,6 +10,7 @@ namespace ThinkBase.Client.GraphModels
         public KnowledgeStateInput createKnowledgeState { get; set; }
 
         public List<KnowledgeStateInput> createKnowledgeStateList { get; set; }
+        public List<KnowledgeStateInput> getKnowledgeStatesByType { get; set; }
 
     }
 }
