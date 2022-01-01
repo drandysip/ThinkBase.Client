@@ -88,7 +88,7 @@ namespace ThinkBase.Client
             {
                 foreach(var k in ksi)
                 {
-                    list.Add(new KnowledgeState { knowledgeGraphName = _graphName, subjectId = k.subjectId, data = k.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) })
+                    list.Add(new KnowledgeState { knowledgeGraphName = _graphName, subjectId = k.subjectId, data = k.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) });
                 }
             }
             return list;
