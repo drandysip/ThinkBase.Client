@@ -103,7 +103,7 @@ namespace ThinkBase.Client
         /// <param name="ks">The Knowledge State</param>
         /// <param name="asSystem">Perform as System - Admin level API keys only</param>
         /// <returns>The Knowledge State Added</returns>
-        public async Task<KnowledgeState> CreateKnowledgeState(KnowledgeState ks, bool? asSystem)
+        public async Task<KnowledgeState?> CreateKnowledgeState(KnowledgeState ks, bool? asSystem)
         {
             var ksi = ConvertKnowledgeState(ks);
             GraphQLHttpRequest req;
@@ -128,7 +128,9 @@ namespace ThinkBase.Client
             if (resp.Errors != null && resp.Errors.Count() > 0)
                 throw new Exception(resp.Errors[0].Message);
             var ksinew = resp.Data.createKnowledgeState;
-            return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = ksinew.subjectId, data = ksinew.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
+            if (ksinew != null)
+                return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = ksinew.subjectId, data = ksinew.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
+            return null;
         }
 
         /// <summary>

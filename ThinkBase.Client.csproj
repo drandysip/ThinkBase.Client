@@ -10,6 +10,7 @@
     <Version>1.0.22</Version>
     <PackageProjectUrl>https://github.com/thinkbase-ai/ThinkBase.Client</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

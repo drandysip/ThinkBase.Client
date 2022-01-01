@@ -6,6 +6,6 @@ namespace ThinkBase.Client.GraphModels
 {
     public class ExportNodaResponse
     {
-        public string exportNoda { get; set; }
+        public string? exportNoda { get; set; }
     }
 }

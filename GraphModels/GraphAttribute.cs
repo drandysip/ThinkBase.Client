@@ -7,7 +7,7 @@ namespace ThinkBase.Client.GraphModels
     public class GraphAttribute : GraphElement
     {
 
-        public string value { get; set; }
+        public string? value { get; set; }
         public double confidence { get; set; }
         public DataType type { get; set; }
 
