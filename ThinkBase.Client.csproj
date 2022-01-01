@@ -2,13 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Company>Dr Andy's IP</Company>
-    <Copyright>(c) ThinkBase LLC 2021</Copyright>
+    <Company>ThinkBase LLC</Company>
+    <Copyright>(c) ThinkBase LLC 2022</Copyright>
     <Description>A simple client for the Darl.dev GraphQL interface that permits you to access ThinkBase models programmatically.</Description>
     <RepositoryUrl>https://github.com/drandysip/ThinkBase.Client</RepositoryUrl>
     <PackageTags>knowledge graphs, AI</PackageTags>
-    <Version>1.0.21</Version>
-    <PackageProjectUrl>https://darl.dev</PackageProjectUrl>
+    <Version>1.0.22</Version>
+    <PackageProjectUrl>https://github.com/thinkbase-ai/ThinkBase.Client</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,13 @@
     <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="3.2.4" />
     <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="3.2.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
