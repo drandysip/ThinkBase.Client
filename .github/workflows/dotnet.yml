@@ -29,4 +29,11 @@ jobs:
           PROJECT_FILE_PATH: ThinkBase.Client.csproj
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}
           INCLUDE_SYMBOLS: true
-          
+    - name: Write info to news Item
+      id: hello
+      uses: thinkbase-ai/newsitem_action@v1.1
+      with:
+        who-to-greet: 'Andy'
+    # Use the output from the `hello` step
+    - name: Get the output time
+      run: echo "The time was ${{ steps.hello.outputs.time }}"          
