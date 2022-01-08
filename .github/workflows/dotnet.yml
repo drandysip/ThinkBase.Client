@@ -1,4 +1,4 @@
-yname: .NET
+name: .NET
 
 on:
   push:
