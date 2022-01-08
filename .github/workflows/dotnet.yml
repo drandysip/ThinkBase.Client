@@ -1,4 +1,4 @@
-name: .NET
+yname: .NET
 
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
       id: hello
       uses: thinkbase-ai/newsitem_action@v1.7
       with:
-        who-to-greet: 'Andy'
+        apiKey: ${{secrets.DARL_API_KEY}}
     # Use the output from the `hello` step
     - name: Get the output time
       run: echo "The time was ${{ steps.hello.outputs.time }}"          
