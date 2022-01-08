@@ -31,7 +31,7 @@ jobs:
           INCLUDE_SYMBOLS: true
     - name: Write info to news Item
       id: hello
-      uses: thinkbase-ai/newsitem_action@v1.8
+      uses: thinkbase-ai/newsitem_action@v1.9
       with:
         apiKey: ${{secrets.DARL_API_KEY}}
     # Use the output from the `hello` step
