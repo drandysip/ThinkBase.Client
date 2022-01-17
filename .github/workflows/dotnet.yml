@@ -24,9 +24,16 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish NuGet
-      uses: brandedoutcast/publish-nuget@v2.5.5
+      uses: alirezanet/publish-nuget@v3.0.0
       with:
           PROJECT_FILE_PATH: ThinkBase.Client.csproj
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}
           INCLUDE_SYMBOLS: true
-          
+    - name: Write info to news Item
+      id: hello
+      uses: thinkbase-ai/newsitem_action@v1.14
+      with:
+        apiKey: ${{secrets.DARL_API_KEY}}
+    # Use the output from the `hello` step
+    - name: Get the output time
+      run: echo "The time was ${{ steps.hello.outputs.time }}"          
