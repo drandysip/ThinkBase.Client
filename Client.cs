@@ -103,16 +103,16 @@ namespace ThinkBase.Client
         /// <param name="ks">The Knowledge State</param>
         /// <param name="asSystem">Perform as System - Admin level API keys only</param>
         /// <returns>The Knowledge State Added</returns>
-        public async Task<KnowledgeState?> CreateKnowledgeState(KnowledgeState ks, bool? asSystem)
+        public async Task<KnowledgeState?> CreateKnowledgeState(KnowledgeState ks, bool? asSystem, bool transient = false)
         {
-            var ksi = ConvertKnowledgeState(ks);
+            var ksi = ConvertKnowledgeState(ks,transient);
             GraphQLHttpRequest req;
             if (asSystem ?? false)
             {
                 req = new GraphQLHttpRequest()
                 {
                     Variables = new { ks = ksi },
-                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks asSystem: true ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks asSystem: true ){knowledgeGraphName subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
                 };
 
             }
@@ -121,7 +121,7 @@ namespace ThinkBase.Client
                 req = new GraphQLHttpRequest()
                 {
                     Variables = new { ks = ksi },
-                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){knowledgeGraphName subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
                 };
             }
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
@@ -138,7 +138,7 @@ namespace ThinkBase.Client
         /// </summary>
         /// <param name="ks"></param>
         /// <returns></returns>
-        public async Task<List<KnowledgeState>> CreateKnowledgeStateBatched(List<KnowledgeState> ksl)
+        public async Task<List<KnowledgeState>> CreateKnowledgeStateBatched(List<KnowledgeState> ksl, bool transient = false)
         {
             bool complete = false;
             int index = 0;
@@ -148,12 +148,12 @@ namespace ThinkBase.Client
             {
                 for(int n = 0; n < batchLength && n + index < ksl.Count; n++)
                 {
-                    ksis.Add(ConvertKnowledgeState(ksl[n + index]));
+                    ksis.Add(ConvertKnowledgeState(ksl[n + index],transient));
                 }
                 var req = new GraphQLHttpRequest()
                 {
                     Variables = new { ks = ksis },
-                    Query = @"mutation ($ks: [knowledgeStateInput]!){ createKnowledgeStateList(ksl: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                    Query = @"mutation ($ks: [knowledgeStateInput]!){ createKnowledgeStateList(ksl: $ks ){knowledgeGraphName subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
                 };
                 var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
                 if (resp.Errors != null && resp.Errors.Count() > 0)
@@ -309,7 +309,7 @@ namespace ThinkBase.Client
             return resp.Data.exportNoda;
         }
 
-        private KnowledgeStateInput ConvertKnowledgeState(KnowledgeState ks)
+        private KnowledgeStateInput ConvertKnowledgeState(KnowledgeState ks, bool transient = false)
         {
             var ksi = new KnowledgeStateInput { knowledgeGraphName = ks.knowledgeGraphName, subjectId = ks.subjectId };
             foreach (var c in ks.data.Keys)
