@@ -15,8 +15,10 @@ namespace ThinkBase.Client
         Task<String> ExportNodaModel();
         Task<GraphModel> FetchModel();
         Task<KnowledgeState> GetKnowledgeState(string subjectId);
+        Task<List<Interaction>> Interact(string conversationId, string message);
         Task SetConnectionPresence(KnowledgeState ks, string nodeName, string destName, string remoteSubjectId);
         Task SetDataValue(KnowledgeState ks, string nodeName, string attName, string value);
         Task SetObjectExistence(KnowledgeState ks, string nodeName, List<DarlTime> existence);
+        Task<IObservable<KnowledgeState>> SubscribeToSeek(string nodeName);
     }
 }

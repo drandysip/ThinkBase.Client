@@ -1,10 +1,13 @@
-﻿using GraphQL.Client.Http;
+﻿using GraphQL;
+using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using ThinkBase.Client.GraphModels;
@@ -322,6 +325,38 @@ namespace ThinkBase.Client
                 ksi.data.Add(new StringListGraphAttributeInputPair { name = c, value = l });
             }
             return ksi;
+        }
+
+        public async Task<IObservable<KnowledgeState>> SubscribeToSeek(string nodeName)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+                throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
+
+            var req = new GraphQLRequest()
+            {
+                Variables = new { name = _graphName, target = _model.ObjectsByExternalId[nodeName].id },
+                Query = @"subscription ($name: String! $target String!){graphChanged(graphName: $name target: $target){knowledgeGraphName subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
+            };
+            IObservable<GraphQLResponse<GraphChangedResult>> subscriptionStream = client.CreateSubscriptionStream<GraphChangedResult>(req);
+            ISubject<KnowledgeState> _knowledgeStateStream = new ReplaySubject<KnowledgeState>(1);
+            subscriptionStream.Subscribe( x =>
+            {               
+                _knowledgeStateStream.OnNext(x.Data.graphChanged);
+            });
+            return _knowledgeStateStream.AsObservable();
+        }
+
+        public async Task<List<Interaction>> Interact(string conversationId, string message)
+        {
+            var req = new GraphQLHttpRequest() { Variables = new { name = _graphName, ksid = conversationId, text = message, messageName = "message" }, Query = @"query ($name: String! $ksid: String! $text:  String! $messageName: String!){interactKnowledgeGraph(kgModelName: $name conversationId: $ksid conversationData: { dataType: textual name: $messageName value: $text }){ darl reference response{dataType name value categories{name value }}}}" };
+            var resp = await client.SendQueryAsync<InteractResponse>(req);
+            if (resp.Errors != null && resp.Errors.Length > 0)
+            {
+                throw new ThinkBaseException($"Interact error: {resp.Errors[0].Message}");
+            }
+            return resp.Data.interactKnowledgeGraph;
         }
     }
 }
