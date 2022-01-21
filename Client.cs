@@ -223,6 +223,34 @@ namespace ThinkBase.Client
             }
         }
 
+        public async Task<GraphAttribute?> GetGraphAttributeByLineage(KnowledgeState ks, string nodeName, string lineage)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+                throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
+            var obj = _model.ObjectsByExternalId[nodeName];
+            if(ks.data.ContainsKey(obj.id))
+            {
+                return ks.data[obj.id].FirstOrDefault(a => a.lineage.StartsWith(lineage);
+            }
+            return null;
+        }
+
+        public async Task<GraphAttribute?> GetGraphAttributeByAttName(KnowledgeState ks, string nodeName, string attName)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+                throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
+            var obj = _model.ObjectsByExternalId[nodeName];
+            if (ks.data.ContainsKey(obj.id))
+            {
+                return ks.data[obj.id].FirstOrDefault(a => a.name == attName);
+            }
+            return null;
+        }
+
         public async Task SetObjectExistence(KnowledgeState ks, string nodeName, List<DarlTime> existence)
         {
             if (_model == null)
