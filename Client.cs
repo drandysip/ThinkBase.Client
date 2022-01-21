@@ -232,7 +232,7 @@ namespace ThinkBase.Client
             var obj = _model.ObjectsByExternalId[nodeName];
             if(ks.data.ContainsKey(obj.id))
             {
-                return ks.data[obj.id].FirstOrDefault(a => a.lineage.StartsWith(lineage);
+                return ks.data[obj.id].FirstOrDefault(a => a.lineage.StartsWith(lineage));
             }
             return null;
         }
