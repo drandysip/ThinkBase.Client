@@ -10,6 +10,7 @@ namespace ThinkBase.Client.GraphModels
         public string subjectId { get; set; } = string.Empty;
         public string knowledgeGraphName { get; set; } = string.Empty;
         public Dictionary<string, List<GraphAttribute>> data { get; set; } = new Dictionary<string, List<GraphAttribute>>();
+        public DateTime? created { get; set; }
 
         public GraphAttribute? GetAttribute(string id, string lineage)
         {

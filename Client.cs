@@ -64,7 +64,7 @@ namespace ThinkBase.Client
             var req = new GraphQLHttpRequest()
             {
                 Variables = new { name = _graphName, id = subjectId },
-                Query = @"query ($name: String! $id: String!){getKnowledgeState(graphName: $name id: $id){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                Query = @"query ($name: String! $id: String!){getKnowledgeState(graphName: $name id: $id){knowledgeGraphName subjectId created data{ name value {name type value lineage inferred confidence}}}}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             if (resp.Errors != null && resp.Errors.Count() > 0)
@@ -80,7 +80,7 @@ namespace ThinkBase.Client
             var req = new GraphQLHttpRequest()
             {
                 Variables = new { name = _graphName, typeObjectId = parentId },
-                Query = @"query ($name: String! $id: String!){getKnowledgeStatesByType(graphName: $name typeObjectId: $typeObjectId){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                Query = @"query ($name: String! $id: String!){getKnowledgeStatesByType(graphName: $name typeObjectId: $typeObjectId){knowledgeGraphName created subjectId data{ name value {name type value lineage inferred confidence}}}}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             if (resp.Errors != null && resp.Errors.Count() > 0)
@@ -365,7 +365,7 @@ namespace ThinkBase.Client
             var req = new GraphQLRequest()
             {
                 Variables = new { name = _graphName, target = _model.ObjectsByExternalId[nodeName].id },
-                Query = @"subscription ($name: String! $target String!){graphChanged(graphName: $name target: $target){knowledgeGraphName subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
+                Query = @"subscription ($name: String! $target String!){graphChanged(graphName: $name target: $target){knowledgeGraphName created subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
             };
             IObservable<GraphQLResponse<GraphChangedResult>> subscriptionStream = client.CreateSubscriptionStream<GraphChangedResult>(req);
             ISubject<KnowledgeState> _knowledgeStateStream = new ReplaySubject<KnowledgeState>(1);
