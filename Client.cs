@@ -386,5 +386,14 @@ namespace ThinkBase.Client
             }
             return resp.Data.interactKnowledgeGraph;
         }
+
+        public async Task<string> GetObjectIdFromName(string name)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (!_model.ObjectsByExternalId.ContainsKey(name))
+                throw new ArgumentOutOfRangeException($"{name} not found in {_graphName}");
+            return _model.ObjectsByExternalId[name].id;
+        }
     }
 }
