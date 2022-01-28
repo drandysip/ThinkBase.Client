@@ -87,7 +87,7 @@ namespace ThinkBase.Client.GraphModels
         /// Gets or sets the name.
         /// </summary>
         /// <value>The name.</value>
-        public string name { get; set; }
+        public string name { get; set; } = String.Empty;
 
         /// <summary>
         /// This result is unknown if true.
@@ -111,17 +111,17 @@ namespace ThinkBase.Client.GraphModels
         /// 3 a triangular fuzzy set,
         /// 4 a trapezoidal fuzzy set.
         /// The values must be ordered in ascending value, but it is permissible for two or more to hold the same value.</remarks>
-        public List<double> values { get; set; }
+        public List<double>? values { get; set; }
 
         /// <summary>
         /// list of categories, each indexed against a truth value.
         /// </summary>
         /// <value>The categories.</value>
         //public Dictionary<string, double> categories { get; set; }
-        public List<NameValuePair> categories { get; set; }
+        public List<NameValuePair>? categories { get; set; }
 
 
-        public List<DateTime> times { get; set; }
+        public List<DateTime>? times { get; set; }
 
         /// <summary>
         /// Indicates approximation has taken place in calculating the values.
@@ -142,7 +142,7 @@ namespace ThinkBase.Client.GraphModels
         /// Gets or sets the sequence.
         /// </summary>
         /// <value>The sequence.</value>
-        public List<List<string>> sequence { get; set; }
+        public List<List<string>>? sequence { get; set; }
 
         /// <summary>
         /// Single central or most confident value, expressed as a string or double.
@@ -153,7 +153,7 @@ namespace ThinkBase.Client.GraphModels
 
     public class NameValuePair
     {
-        public string name { get; set; }
+        public string name { get; set; } = String.Empty;    
         public double value { get; set; }
     }
 }

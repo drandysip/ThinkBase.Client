@@ -2,10 +2,10 @@
 {
     public class Interaction
     {
-        public string darl { get; set; }
+        public string darl { get; set; } = string.Empty;
 
-        public string reference { get; set; }
+        public string reference { get; set; } = string.Empty;
 
-        public DarlVarResponse response { get; set; }
+        public DarlVarResponse? response { get; set; }
     }
 }

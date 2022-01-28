@@ -18,7 +18,7 @@ namespace ThinkBase.Client
     {
         private string _graphName;
         private GraphQLHttpClient client;
-        private GraphModel _model;
+        private GraphModel? _model;
         private int batchLength { get; set; } = 10;
 
         ITraceWriter traceWriter = new MemoryTraceWriter();
@@ -54,12 +54,12 @@ namespace ThinkBase.Client
                 throw new Exception(model.Errors[0].Message);
             if(model.Data.kGraphByName == null)
                 throw new Exception($"{_graphName} is not present in this account.");
-            _model = model.Data.kGraphByName.model;
+            _model = model.Data.kGraphByName.model ?? new GraphModel();
             _model.Init();
             return _model;
         }
 
-        public async Task<KnowledgeState> GetKnowledgeState(string subjectId)
+        public async Task<KnowledgeState?> GetKnowledgeState(string subjectId)
         {
             var req = new GraphQLHttpRequest()
             {
@@ -191,12 +191,12 @@ namespace ThinkBase.Client
         {
             if (_model == null)
                 await FetchModel();
-            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+            if (_model == null || !_model.ObjectsByExternalId.ContainsKey(nodeName))
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
             ks.knowledgeGraphName = _graphName;
             var obj = _model.ObjectsByExternalId[nodeName];
             bool found = false;
-            foreach (var l in obj.properties)
+            foreach (var l in obj.properties ?? new List<GraphAttribute>())
             {
                 if (l.name == attName)
                 {
@@ -227,7 +227,7 @@ namespace ThinkBase.Client
         {
             if (_model == null)
                 await FetchModel();
-            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+            if (_model == null || !_model.ObjectsByExternalId.ContainsKey(nodeName))
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
             var obj = _model.ObjectsByExternalId[nodeName];
             if(ks.data.ContainsKey(obj.id))
@@ -241,7 +241,7 @@ namespace ThinkBase.Client
         {
             if (_model == null)
                 await FetchModel();
-            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+            if (_model == null || !_model.ObjectsByExternalId.ContainsKey(nodeName))
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
             var obj = _model.ObjectsByExternalId[nodeName];
             if (ks.data.ContainsKey(obj.id))
@@ -255,11 +255,13 @@ namespace ThinkBase.Client
         {
             if (_model == null)
                 await FetchModel();
-            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+            if (_model == null || !_model.ObjectsByExternalId.ContainsKey(nodeName))
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
             ks.knowledgeGraphName = _graphName;
             var obj = _model.ObjectsByExternalId[nodeName];
-            var att = obj.properties.FirstOrDefault(a => a.name == "existence");
+            if(obj == null)
+                throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
+            var att = obj.properties?.FirstOrDefault(a => a.name == "existence");
             if(att != null)
             {
                 att.existence = existence;
@@ -274,7 +276,7 @@ namespace ThinkBase.Client
         {
             if (_model == null)
                 await FetchModel();
-            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+            if (_model == null || !_model.ObjectsByExternalId.ContainsKey(nodeName))
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
             if (!_model.ObjectsByExternalId.ContainsKey(destName))
                 throw new ArgumentOutOfRangeException($"{destName} not found in {_graphName}");
@@ -319,15 +321,15 @@ namespace ThinkBase.Client
 
         public static GraphAttributeInput ConvertAttributeInput(GraphAttribute a)
         {
-            return new GraphAttributeInput { confidence = a.confidence, inferred = a.inferred, value = a.value, existence = a.existence, name = a.name, type = a.type, lineage = a.lineage };
+            return new GraphAttributeInput { confidence = a.confidence, inferred = a.inferred, value = a.value ?? "", existence = a.existence, name = a.name, type = a.type, lineage = a.lineage };
         }
 
         public override string ToString()
         {
-            return traceWriter.ToString();
+            return traceWriter.ToString() ?? "";
         }
 
-        public async Task<string> ExportNodaModel()
+        public async Task<string?> ExportNodaModel()
         {
             var req = new GraphQLHttpRequest()
             {
@@ -335,8 +337,8 @@ namespace ThinkBase.Client
                 Query = @"query ($name: String! ){exportNoda(graphName: $name)}"
             };
             var resp = await client.SendQueryAsync<ExportNodaResponse>(req);
-            if (resp.Errors != null && resp.Errors.Count() > 0)
-                throw new Exception(resp.Errors[0].Message);
+            if (resp == null || (resp.Errors != null && resp.Errors.Count() > 0))
+                throw new Exception(resp?.Errors?[0].Message);
             return resp.Data.exportNoda;
         }
 
@@ -348,7 +350,7 @@ namespace ThinkBase.Client
                 var l = new List<GraphAttributeInput>();
                 foreach (var p in ks.data[c])
                 {
-                    l.Add(new GraphAttributeInput { confidence = p.confidence, existence = p.existence, inferred = p.inferred, lineage = p.lineage, name = p.name, type = p.type, value = p.value });
+                    l.Add(new GraphAttributeInput { confidence = p.confidence, existence = p.existence, inferred = p.inferred, lineage = p.lineage, name = p.name, type = p.type, value = p.value ?? "" });
                 }
                 ksi.data.Add(new StringListGraphAttributeInputPair { name = c, value = l });
             }
@@ -359,13 +361,13 @@ namespace ThinkBase.Client
         {
             if (_model == null)
                 await FetchModel();
-            if (!_model.ObjectsByExternalId.ContainsKey(nodeName))
+            if (_model == null || !_model.ObjectsByExternalId.ContainsKey(nodeName))
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
 
             var req = new GraphQLRequest()
             {
                 Variables = new { name = _graphName, target = _model.ObjectsByExternalId[nodeName].id },
-                Query = @"subscription ($name: String! $target String!){graphChanged(graphName: $name target: $target){knowledgeGraphName created subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
+                Query = @"subscription ($name: String! $target String!){graphChanged(graphName: $name target: $target){knowledgeGraphName created subjectId data{ name value {name type value lineage inferred confidence}}}}"
             };
             IObservable<GraphQLResponse<GraphChangedResult>> subscriptionStream = client.CreateSubscriptionStream<GraphChangedResult>(req);
             ISubject<KnowledgeState> _knowledgeStateStream = new ReplaySubject<KnowledgeState>(1);
@@ -391,7 +393,7 @@ namespace ThinkBase.Client
         {
             if (_model == null)
                 await FetchModel();
-            if (!_model.ObjectsByExternalId.ContainsKey(name))
+            if (_model == null || !_model.ObjectsByExternalId.ContainsKey(name))
                 throw new ArgumentOutOfRangeException($"{name} not found in {_graphName}");
             return _model.ObjectsByExternalId[name].id;
         }
