@@ -367,7 +367,7 @@ namespace ThinkBase.Client
             var req = new GraphQLRequest()
             {
                 Variables = new { name = _graphName, target = _model.ObjectsByExternalId[nodeName].id },
-                Query = @"subscription ($name: String! $target String!){graphChanged(graphName: $name target: $target){knowledgeGraphName created subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                Query = @"subscription ($name: String! $target: String!){graphChanged(graphName: $name target: $target){knowledgeGraphName created subjectId data{ name value {name type value lineage inferred confidence}}}}"
             };
             IObservable<GraphQLResponse<GraphChangedResult>> subscriptionStream = client.CreateSubscriptionStream<GraphChangedResult>(req);
             ISubject<KnowledgeState> _knowledgeStateStream = new ReplaySubject<KnowledgeState>(1);
