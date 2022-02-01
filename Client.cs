@@ -32,8 +32,16 @@ namespace ThinkBase.Client
                 MissingMemberHandling = MissingMemberHandling.Ignore,
                 Converters = { new ConstantCaseEnumConverter() }
             }));
-            if(!string.IsNullOrEmpty(authcode))
+            if (!string.IsNullOrEmpty(authcode))
+            {
                 client.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authcode);
+                client.Options.ConfigureWebSocketConnectionInitPayload = (GraphQLHttpClientOptions x) => {//adds authorization for subscriptions
+                    return new Dictionary<string, string>()
+                    {
+                        ["Authorization"] = authcode
+                    };
+                };
+            }
             _graphName = graphName;
         }
 
