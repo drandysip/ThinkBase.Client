@@ -14,7 +14,7 @@
   <PropertyGroup>
 	<IncludeSymbols>true</IncludeSymbols>
 	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </propertyGroup>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="GraphQL.Client" Version="4.0.2" />
