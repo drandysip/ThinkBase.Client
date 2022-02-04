@@ -52,12 +52,22 @@ namespace ThinkBase.Client
         /// <returns></returns>
         public async Task<GraphModel> FetchModel()
         {
-            var modelReq = new GraphQLHttpRequest
+            GraphQLResponse<KGraphResponse>? model = null;
+            try
             {
-                Variables = new { name = _graphName },
-                Query = "query ($name: String!){kGraphByName(name: $name){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value type existence {raw precision } } existence {raw precision }}} edges {name value{lineage endId startId name inferred weight id existence {raw precision }}}}}}"
-            };
-            var model = await client.SendQueryAsync<KGraphResponse>(modelReq);
+                var modelReq = new GraphQLHttpRequest
+                {
+                    Variables = new { name = _graphName },
+                    Query = "query ($name: String!){kGraphByName(name: $name){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value type existence {raw precision } } existence {raw precision }}} edges {name value{lineage endId startId name inferred weight id existence {raw precision }}}}}}"
+                };
+                model = await client.SendQueryAsync<KGraphResponse>(modelReq);
+            }
+            catch(Exception ex)
+            {
+                throw new Exception($"FetchModel failed. Message: {ex.Message}");
+            }
+            if (model == null) 
+                throw new Exception("SendQueryAsync returned null.");
             if (model.Errors != null && model.Errors.Count() > 0)
                 throw new Exception(model.Errors[0].Message);
             if(model.Data.kGraphByName == null)
