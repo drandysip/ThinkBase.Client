@@ -23,7 +23,7 @@ namespace ThinkBase.Client
 
         ITraceWriter traceWriter = new MemoryTraceWriter();
 
-        public Client(string authcode, string graphName, string path = "https://darl.dev/graphql/")
+        public Client(string authcode, string graphName, string path = "https://darl.dev/graphql/", bool noSubs = false)
         {
             client = new GraphQLHttpClient(path, new NewtonsoftJsonSerializer(new JsonSerializerSettings
             {
@@ -35,12 +35,16 @@ namespace ThinkBase.Client
             if (!string.IsNullOrEmpty(authcode))
             {
                 client.HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authcode);
-                client.Options.ConfigureWebSocketConnectionInitPayload = (GraphQLHttpClientOptions x) => {//adds authorization for subscriptions
-                    return new Dictionary<string, string>()
-                    {
-                        ["Authorization"] = authcode
+                if (!noSubs)
+                {
+                    client.Options.ConfigureWebSocketConnectionInitPayload = (GraphQLHttpClientOptions x) =>
+                    {//adds authorization for subscriptions
+                        return new Dictionary<string, string>()
+                        {
+                            ["Authorization"] = authcode
+                        };
                     };
-                };
+                }
             }
             _graphName = graphName;
         }
