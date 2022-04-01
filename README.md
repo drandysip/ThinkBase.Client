@@ -37,3 +37,6 @@ You can fetch a knowledge state by its subject Id.
 ```C#
 var customerKS = await client.GetKnowledgeState("customer:" + customerId.ToString());
 ```
+# Debugging
+
+ThinkBase Client supports [SourceLink](https://github.com/dotnet/sourcelink). Symbols are uploaded each build to the NuGet Symbol server and you can debug into and set breakpoints in the ThinkBase Client code. 

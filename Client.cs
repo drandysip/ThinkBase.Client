@@ -2,6 +2,7 @@
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace ThinkBase.Client
 
         ITraceWriter traceWriter = new MemoryTraceWriter();
 
-        public Client(string authcode, string graphName, string path = "https://darl.dev/graphql/", bool noSubs = false)
+        public Client(string authcode, string graphName, string path = "https://darl.dev/graphql", bool noSubs = false)
         {
             client = new GraphQLHttpClient(path, new NewtonsoftJsonSerializer(new JsonSerializerSettings
             {
@@ -137,7 +138,7 @@ namespace ThinkBase.Client
                 req = new GraphQLHttpRequest()
                 {
                     Variables = new { ks = ksi },
-                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks asSystem: true ){knowledgeGraphName subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
+                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks asSystem: true ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
                 };
 
             }
@@ -146,7 +147,7 @@ namespace ThinkBase.Client
                 req = new GraphQLHttpRequest()
                 {
                     Variables = new { ks = ksi },
-                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){knowledgeGraphName subjectId transient data{ name value {name type value lineage inferred confidence}}}}"
+                    Query = @"mutation ($ks: knowledgeStateInput!){ createKnowledgeState(ks: $ks ){knowledgeGraphName subjectId data{ name value {name type value lineage inferred confidence}}}}"
                 };
             }
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
@@ -400,6 +401,22 @@ namespace ThinkBase.Client
             return _knowledgeStateStream.AsObservable();
         }
 
+        public IObservable<DarlMineReport> SubscribeToBuild(string name, string? data, string? patternPath, List<DataMap> dataMaps )
+        {
+            var req = new GraphQLRequest()
+            {
+                Variables = new { name = name, data = data, patternPath = patternPath, dataMaps = dataMaps },
+                Query = @"subscription ($name: String! $data: String! $patternPath: String! $dataMaps: [dataMap]! ){build(name: $name data: $data patternPath: $patternPath dataMaps: $dataMaps){code errorText testPerformance trainPercent trainPerformance unknownResponsePercent}}"
+            };
+            IObservable<GraphQLResponse<BuildResult>> subscriptionStream = client.CreateSubscriptionStream<BuildResult>(req);
+            ISubject<DarlMineReport> reportStream = new ReplaySubject<DarlMineReport>(1);
+            subscriptionStream.Subscribe(x =>
+            {
+                reportStream.OnNext(x.Data.build);
+            });
+            return reportStream.AsObservable();
+        }
+
         public async Task<List<Interaction>> Interact(string conversationId, string message)
         {
             var req = new GraphQLHttpRequest() { Variables = new { name = _graphName, ksid = conversationId, text = message, messageName = "message" }, Query = @"query ($name: String! $ksid: String! $text:  String! $messageName: String!){interactKnowledgeGraph(kgModelName: $name conversationId: $ksid conversationData: { dataType: textual name: $messageName value: $text }){ darl reference response{dataType name value categories{name value }}}}" };
@@ -418,6 +435,19 @@ namespace ThinkBase.Client
             if (_model == null || !_model.ObjectsByExternalId.ContainsKey(name))
                 throw new ArgumentOutOfRangeException($"{name} not found in {_graphName}");
             return _model.ObjectsByExternalId[name].id;
+        }
+
+        public async Task<bool> DeleteKGraph()
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName },
+                Query = @"mutation ($name: String!){deleteKG(name: $name)}"
+            };
+            var resp = await client.SendQueryAsync<object>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            return ((JObject)resp.Data).Value<bool>("deleteKG");
         }
     }
 }

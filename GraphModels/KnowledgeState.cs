@@ -5,6 +5,9 @@ using System.Text;
 
 namespace ThinkBase.Client.GraphModels
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class KnowledgeState
     {
         public string subjectId { get; set; } = string.Empty;
