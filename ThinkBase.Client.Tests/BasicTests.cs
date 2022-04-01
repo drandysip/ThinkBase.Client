@@ -3,7 +3,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,7 +35,7 @@ namespace ThinkBase.Client.Tests
             await client.SetDataValue(ks, "rapid_change", "text", "poopies");
             await client.SetConnectionPresence(ks, "rapid_change", "rapid_change_yes", "poopiess");
             ks.subjectId = "kjgjkhkjhkjhk";
-            var newKS = await client.CreateKnowledgeState(ks,false,true);
+            var newKS = await client.CreateKnowledgeState(ks, false, true);
         }
 
         [TestMethod]
@@ -106,7 +105,8 @@ namespace ThinkBase.Client.Tests
                 target = true
             }});
             DarlMineReport? rep = null;
-            subs.Subscribe( a => {
+            subs.Subscribe(a =>
+            {
                 rep = a;
             });
             Thread.Sleep(5000); //allow 5 seconds to run
