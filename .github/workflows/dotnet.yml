@@ -20,11 +20,9 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore --ignore-failed-sources
     - name: Build
       run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
     - name: Publish NuGet
       uses: alirezanet/publish-nuget@v3.0.0
       with:
@@ -36,6 +34,4 @@ jobs:
       uses: thinkbase-ai/newsitem_action@v1.14
       with:
         apiKey: ${{secrets.DARL_API_KEY}}
-    # Use the output from the `hello` step
-    - name: Get the output time
-      run: echo "The time was ${{ steps.hello.outputs.time }}"          
+     
