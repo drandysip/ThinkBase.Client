@@ -22,7 +22,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore --ignore-failed-sources
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build /home/runner/work/ThinkBase.Client/ThinkBase.Client/ThinkBase.Client.csproj --configuration Release --no-restore
     - name: Publish NuGet
       uses: alirezanet/publish-nuget@v3.0.0
       with:
