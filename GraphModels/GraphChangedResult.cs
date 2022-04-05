@@ -6,6 +6,6 @@ namespace ThinkBase.Client.GraphModels
 {
     public class GraphChangedResult
     {
-        public KnowledgeState graphChanged { get; set; }
+        public KnowledgeStateInput graphChanged { get; set; }
     }
 }

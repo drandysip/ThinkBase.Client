@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace ThinkBase.Client.Tests
     public class BasicTests
     {
         private string _apiKey;
-        private string _path = "https://darl.dev/graphql";
+        private string _path = "https://localhost:44311/graphql";
 
         [TestInitialize()]
         public void Initialize()
@@ -114,6 +115,31 @@ namespace ThinkBase.Client.Tests
             Assert.IsTrue(rep != null);
             Assert.IsTrue(rep.trainPerformance > 80.0);
             Assert.IsTrue(await client.DeleteKGraph());
+        }
+
+        [TestMethod]
+        public async Task TestSeek()
+        {
+            var graph = "backoffice_new.graph";
+            var client = new Client(_apiKey, graph, _path);
+            var res = await client.FetchModel();
+            res.Init();
+            var subs = await client.SubscribeToSeek("newsitem");
+            KnowledgeStateInput? knowledgeState = null;
+            string errorMessage;
+            subs.Subscribe(
+                a => knowledgeState = a,
+                b => errorMessage = b.Message
+                );
+            var ks = new KnowledgeState();
+            await client.SetDataValue(ks, "newsitem", "title", "A news story");
+            await client.SetDataValue(ks, "newsitem", "content", "The content of a news story");
+            await client.SetDataValue(ks, "newsitem", "category", "news");
+            ks.subjectId = Guid.NewGuid().ToString();
+            var newKS = await client.CreateKnowledgeState(ks, false, true);
+            Thread.Sleep(1000); //allow 1 second to run
+            Assert.IsTrue(knowledgeState != null);
+            Assert.IsTrue(knowledgeState.data.Any(a => a.value.Any(b => b.name == "completed")));
         }
     }
 }

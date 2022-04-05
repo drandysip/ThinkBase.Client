@@ -23,6 +23,6 @@ namespace ThinkBase.Client
         Task SetDataValue(KnowledgeState ks, string nodeName, string attName, string value);
         Task SetObjectExistence(KnowledgeState ks, string nodeName, List<DarlTime> existence);
         IObservable<DarlMineReport> SubscribeToBuild(string name, string? data, string? patternPath, List<DataMap> dataMaps);
-        Task<IObservable<KnowledgeState>> SubscribeToSeek(string nodeName);
+        Task<IObservable<KnowledgeStateInput>> SubscribeToSeek(string nodeName);
     }
 }
