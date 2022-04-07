@@ -54,16 +54,16 @@ namespace ThinkBase.Client
         /// <summary>
         /// Get a read-only version of the graph
         /// </summary>
-        /// <returns></returns>
-        public async Task<GraphModel> FetchModel()
+        /// <returns>The graph model</returns>
+        public async Task<GraphModel> FetchModel(bool asSystem = false)
         {
             GraphQLResponse<KGraphResponse>? model = null;
             try
             {
                 var modelReq = new GraphQLHttpRequest
                 {
-                    Variables = new { name = _graphName },
-                    Query = "query ($name: String!){kGraphByName(name: $name){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value type existence {raw precision } } existence {raw precision }}} edges {name value{lineage endId startId name inferred weight id existence {raw precision }}}}}}"
+                    Variables = new { name = _graphName, ass = asSystem },
+                    Query = "query ($name: String! $ass: Boolean){kGraphByName(name: $name asSystem: $ass){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value type existence {raw precision } } existence {raw precision }}} edges {name value{lineage endId startId name inferred weight id existence {raw precision }}}}}}"
                 };
                 model = await client.SendQueryAsync<KGraphResponse>(modelReq);
             }
@@ -98,12 +98,19 @@ namespace ThinkBase.Client
             return null;
         }
 
-        public async Task<List<KnowledgeState>> GetChildKnowledgeStates(string parentId)
+        /// <summary>
+        /// Get a set of knowledge states containing data/state for the given object.
+        /// </summary>
+        /// <param name="parentId">The id of the object the KSs must contain</param>
+        /// <param name="asSystem">Admin accounts only</param>
+        /// <returns>A list of KnowledgeStates</returns>
+        /// <exception cref="Exception">Thrown for query failure</exception>
+        public async Task<List<KnowledgeState>> GetChildKnowledgeStates(string parentId, bool asSystem)
         {
             var req = new GraphQLHttpRequest()
             {
-                Variables = new { name = _graphName, typeObjectId = parentId },
-                Query = @"query ($name: String! $id: String!){getKnowledgeStatesByType(graphName: $name typeObjectId: $typeObjectId){knowledgeGraphName created subjectId data{ name value {name type value lineage inferred confidence}}}}"
+                Variables = new { name = _graphName, id = parentId, ass = asSystem },
+                Query = @"query ($name: String! $id: String! $ass: Boolean){getKnowledgeStatesByType(graphName: $name typeObjectId: $id asSystem: $ass){knowledgeGraphName created subjectId data{ name value {name type value lineage inferred confidence}}}}"
             };
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             if (resp.Errors != null && resp.Errors.Count() > 0)

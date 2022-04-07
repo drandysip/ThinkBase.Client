@@ -16,6 +16,7 @@ namespace ThinkBase.Client.Tests
     {
         private string _apiKey;
         private string _path = "https://localhost:44311/graphql";
+        private string _adminApiKey;
 
         [TestInitialize()]
         public void Initialize()
@@ -24,6 +25,7 @@ namespace ThinkBase.Client.Tests
             .AddUserSecrets<BasicTests>()
             .Build();
             _apiKey = configuration["apiKey"];
+            _adminApiKey = configuration["adminApiKey"];
         }
 
         [TestMethod]
@@ -140,6 +142,19 @@ namespace ThinkBase.Client.Tests
             Thread.Sleep(1000); //allow 1 second to run
             Assert.IsTrue(knowledgeState != null);
             Assert.IsTrue(knowledgeState.data.Any(a => a.value.Any(b => b.name == "completed")));
+        }
+
+        [TestMethod]
+        public async Task TestGetChildKnowledgeStates()
+        {
+            var graph = "backoffice_test.graph";
+            var client = new Client(_adminApiKey, graph, _path);
+            var res = await client.FetchModel(true);
+            res.Init();
+            var pushObjectId = await client.GetObjectIdFromName("pushSubscription");
+            var subs = await client.GetChildKnowledgeStates(pushObjectId,true);
+            Assert.IsNotNull(subs);
+            Assert.IsTrue(subs.Any());
         }
     }
 }
