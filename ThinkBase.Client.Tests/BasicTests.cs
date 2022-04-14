@@ -156,5 +156,31 @@ namespace ThinkBase.Client.Tests
             Assert.IsNotNull(subs);
             Assert.IsTrue(subs.Any());
         }
+
+        [TestMethod]
+        public async Task TestInteract()
+        {
+            var graph = "personality_test.graph";
+            var client = new Client(_apiKey, graph, _path);
+            var res = await client.FetchModel();
+            res.Init();
+            var conversationId = Guid.NewGuid().ToString();
+            var response = await client.Interact(conversationId, "What is my personality?");
+            Assert.IsNotNull(response);
+            Assert.AreEqual(response.Count(), 2);
+            Assert.IsTrue(response[0].response.dataType == DarlVarResponse.DataType.textual);
+            Assert.IsTrue(response[1].response.dataType == DarlVarResponse.DataType.categorical);
+            Assert.IsTrue(response[1].response.categories.Count == 2);
+            Assert.IsTrue(response[1].response.categories[0].name == "Yes");
+            response = await client.Interact(conversationId, "Yes");
+            for (int i = 0; i < 100; i++)
+            {
+                if(response[0].response.dataType == DarlVarResponse.DataType.categorical)
+                    response = await client.Interact(conversationId, response[0].response.categories[0].name);
+                else if(response[0].response.dataType == DarlVarResponse.DataType.numeric)
+                    response = await client.Interact(conversationId, "50");
+            }
+            response = await client.Interact(conversationId, response[0].response.categories[0].name); //last question
+        }
     }
 }
