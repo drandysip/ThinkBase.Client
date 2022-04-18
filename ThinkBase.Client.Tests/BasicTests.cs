@@ -15,7 +15,7 @@ namespace ThinkBase.Client.Tests
     public class BasicTests
     {
         private string _apiKey;
-        private string _path = "https://localhost:44311/graphql";
+        private string _path = "https://darl.dev/graphql"; //"https://localhost:44311/graphql"
         private string _adminApiKey;
 
         [TestInitialize()]
