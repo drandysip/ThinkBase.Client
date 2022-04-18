@@ -181,6 +181,7 @@ namespace ThinkBase.Client.Tests
                     response = await client.Interact(conversationId, "50");
             }
             response = await client.Interact(conversationId, response[0].response.categories[0].name); //last question
+            Assert.AreEqual("# Results\nIn percentiles\n\nPsychoticness: 90.15\n\nNeuroticness: 97.61\n\nExtraversion: 94.40\n\nSelf-Deception: 29.91", response[0].response.value);
         }
     }
 }
