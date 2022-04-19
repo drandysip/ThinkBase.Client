@@ -7,7 +7,7 @@
     <Description>A simple client for the Darl.dev GraphQL interface that permits you to access ThinkBase models programmatically.</Description>
     <RepositoryUrl>https://github.com/thinkbase-ai/ThinkBase.Client</RepositoryUrl>
     <PackageTags>knowledge graphs, AI</PackageTags>
-    <Version>1.0.41</Version>
+    <Version>1.0.42</Version>
     <PackageProjectUrl>https://github.com/thinkbase-ai/ThinkBase.Client</PackageProjectUrl>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -31,7 +31,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MSTest.TestFramework" Version="2.2.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
