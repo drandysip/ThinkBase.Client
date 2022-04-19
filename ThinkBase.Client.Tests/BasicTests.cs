@@ -15,7 +15,7 @@ namespace ThinkBase.Client.Tests
     public class BasicTests
     {
         private string _apiKey;
-        private string _path = "https://darl.dev/graphql"; //"https://localhost:44311/graphql"
+        private string _path = "https://localhost:44311/graphql"; // "https://darl.dev/graphql"; 
         private string _adminApiKey;
 
         [TestInitialize()]
@@ -182,6 +182,19 @@ namespace ThinkBase.Client.Tests
             }
             response = await client.Interact(conversationId, response[0].response.categories[0].name); //last question
             Assert.AreEqual("# Results\nIn percentiles\n\nPsychoticness: 90.15\n\nNeuroticness: 97.61\n\nExtraversion: 94.40\n\nSelf-Deception: 29.91", response[0].response.value);
+        }
+
+        [TestMethod]
+        public async Task TestgetKnowledgeStatesByTypeAndAttribute()
+        {
+            var graph = "backoffice_test.graph";
+            var client = new Client(_adminApiKey, graph, _path);
+            var res = await client.FetchModel(true);
+            res.Init();
+            var nItemObjectId = await client.GetObjectIdFromName("pushSubscription");
+            var items = await client.GetChildKnowledgeStatesWithAttributeValue(nItemObjectId, "noun:01,4,04,01,01,1,00", "92.27.229.0", true);
+            Assert.IsNotNull(items);
+            Assert.AreEqual(2, items.Count);
         }
     }
 }

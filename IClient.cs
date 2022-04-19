@@ -15,6 +15,8 @@ namespace ThinkBase.Client
         Task<bool> DeleteKGraph();
         Task<String?> ExportNodaModel();
         Task<GraphModel> FetchModel(bool asSystem = false);
+        Task<List<KnowledgeState>> GetChildKnowledgeStates(string parentId, bool asSystem);
+        Task<List<KnowledgeState>> GetChildKnowledgeStatesWithAttributeValue(string parentId, string attLineage, string attValue, bool asSystem);
         Task<GraphAttribute?> GetGraphAttributeByAttName(KnowledgeState ks, string nodeName, string attName);
         Task<GraphAttribute?> GetGraphAttributeByLineage(KnowledgeState ks, string nodeName, string lineage);
         Task<KnowledgeState?> GetKnowledgeState(string subjectId);

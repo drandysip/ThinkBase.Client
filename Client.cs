@@ -126,7 +126,29 @@ namespace ThinkBase.Client
             }
             return list;
         }
-    
+
+        public async Task<List<KnowledgeState>> GetChildKnowledgeStatesWithAttributeValue(string parentId, string attLineage, string attValue, bool asSystem)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName, id = parentId, ass = asSystem, attl = attLineage, attv = attValue },
+                Query = @"query ($name: String! $id: String! $attl: String! $attv: String! $ass: Boolean){getKnowledgeStatesByTypeAndAttribute(graphName: $name typeObjectId: $id attLineage: $attl attValue: $attv asSystem: $ass){knowledgeGraphName created subjectId data{ name value {name type value lineage inferred confidence}}}}"
+            };
+            var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            var ksi = resp.Data.getKnowledgeStatesByTypeAndAttribute;
+            var list = new List<KnowledgeState>();
+            if (ksi != null)
+            {
+                foreach (var k in ksi)
+                {
+                    list.Add(new KnowledgeState { knowledgeGraphName = _graphName, subjectId = k.subjectId, data = k.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) });
+                }
+            }
+            return list;
+        }
+
 
 
         /// <summary>
