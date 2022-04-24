@@ -394,6 +394,27 @@ namespace ThinkBase.Client
             return resp.Data.exportNoda;
         }
 
+        /// <summary>
+        /// Admin only
+        /// </summary>
+        /// <param name="collateral"></param>
+        /// <param name="subject"></param>
+        /// <param name="sendfrom"></param>
+        /// <param name="test"></param>
+        /// <returns></returns>
+        public async Task<int?> MailShot(string collateral, string subject, string sendfrom, bool test)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { collateral = collateral, subject = subject, sendfrom = sendfrom, test = test },
+                Query = @"mutation ($collateral: String! $subject: String! $sendfrom: String! $test: Boolean!  ){mailshot(collateral: $collateral subject: $subject sendfrom: $sendfrom test: $test)}"
+            };
+            var resp = await client.SendQueryAsync<MailShotResponse>(req);
+            if (resp == null || (resp.Errors != null && resp.Errors.Count() > 0))
+                throw new Exception(resp?.Errors?[0].Message);
+            return resp.Data.mailshot;
+        }
+
         private KnowledgeStateInput ConvertKnowledgeState(KnowledgeState ks, bool transient = false)
         {
             var ksi = new KnowledgeStateInput { knowledgeGraphName = ks.knowledgeGraphName, subjectId = ks.subjectId };

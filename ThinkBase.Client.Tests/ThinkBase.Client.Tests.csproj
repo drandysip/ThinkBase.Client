@@ -9,10 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="email_template.html" />
     <None Remove="iris_data.xml" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="email_template.html" />
     <EmbeddedResource Include="iris_data.xml" />
   </ItemGroup>
 

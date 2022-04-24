@@ -21,6 +21,7 @@ namespace ThinkBase.Client
         Task<GraphAttribute?> GetGraphAttributeByLineage(KnowledgeState ks, string nodeName, string lineage);
         Task<KnowledgeState?> GetKnowledgeState(string subjectId);
         Task<List<Interaction>> Interact(string conversationId, string message);
+        Task<int?> MailShot(string collateral, string subject, string sendfrom, bool test);
         Task SetConnectionPresence(KnowledgeState ks, string nodeName, string destName, string remoteSubjectId);
         Task SetDataValue(KnowledgeState ks, string nodeName, string attName, string value);
         Task SetObjectExistence(KnowledgeState ks, string nodeName, List<DarlTime> existence);

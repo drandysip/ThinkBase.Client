@@ -196,5 +196,18 @@ namespace ThinkBase.Client.Tests
             Assert.IsNotNull(items);
             Assert.AreEqual(2, items.Count);
         }
+
+        [TestMethod]
+        public async Task TestMailShot()
+        {
+            var graph = "backoffice_test.graph";
+            var client = new Client(_adminApiKey, graph, _path);
+            var res = await client.FetchModel(true);
+            res.Init();
+            var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("ThinkBase.Client.Tests.email_template.html"));
+            var content = reader.ReadToEnd();
+            var count = await client.MailShot(content, "test_email", "support@darl.ai", true);
+            Assert.IsTrue(count > 1);
+        }
     }
 }
