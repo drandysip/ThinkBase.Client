@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThinkBase.Client", "ThinkBa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThinkBase.Client.Tests", "ThinkBase.Client.Tests\ThinkBase.Client.Tests.csproj", "{909DB3D1-10C9-440F-A363-A62484E7911E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThinkBase.Client.StressTest", "ThinkBase.Client.StressTest\ThinkBase.Client.StressTest.csproj", "{679625CE-4CAC-4EEE-A226-2B39A30C957E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{909DB3D1-10C9-440F-A363-A62484E7911E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{909DB3D1-10C9-440F-A363-A62484E7911E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{909DB3D1-10C9-440F-A363-A62484E7911E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{679625CE-4CAC-4EEE-A226-2B39A30C957E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{679625CE-4CAC-4EEE-A226-2B39A30C957E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{679625CE-4CAC-4EEE-A226-2B39A30C957E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{679625CE-4CAC-4EEE-A226-2B39A30C957E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

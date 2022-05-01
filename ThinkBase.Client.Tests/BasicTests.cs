@@ -9,13 +9,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using ThinkBase.Client.GraphModels;
 
+//[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
 namespace ThinkBase.Client.Tests
 {
     [TestClass]
     public class BasicTests
     {
         private string _apiKey;
-        private string _path = "https://localhost:44311/graphql"; // "https://darl.dev/graphql"; 
+        private string _path = "https://darl.dev/graphql"; 
         private string _adminApiKey;
 
         [TestInitialize()]
@@ -182,6 +184,10 @@ namespace ThinkBase.Client.Tests
             }
             response = await client.Interact(conversationId, response[0].response.categories[0].name); //last question
             Assert.AreEqual("# Results\nIn percentiles\n\nPsychoticness: 90.15\n\nNeuroticness: 97.61\n\nExtraversion: 94.40\n\nSelf-Deception: 29.91", response[0].response.value);
+            //fetch the KS
+            var ks = await client.GetInteractKnowledgeState(conversationId);
+            Assert.IsNotNull(ks);
+            Assert.AreEqual(110,ks.data.Count);
         }
 
         [TestMethod]
@@ -208,6 +214,16 @@ namespace ThinkBase.Client.Tests
             var content = reader.ReadToEnd();
             var count = await client.MailShot(content, "test_email", "support@darl.ai", true);
             Assert.IsTrue(count > 1);
+        }
+
+        [TestMethod]
+        public async Task StressTestInteract()
+        {
+            await Task.WhenAll(
+                    TestInteract(),
+                    TestInteract(),
+                    TestInteract()
+                    );
         }
     }
 }

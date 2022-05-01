@@ -188,6 +188,22 @@ namespace ThinkBase.Client
             return null;
         }
 
+        public async Task<KnowledgeState?> GetInteractKnowledgeState(string subjectId)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { id = subjectId },
+                Query = @"query ($id: String!){getInteractKnowledgeState(id: $id){knowledgeGraphName subjectId created data{ name value {name type value lineage inferred confidence}}}}"
+            };
+            var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            var ksi = resp.Data.getInteractKnowledgeState;
+            if (ksi != null)
+                return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = subjectId, data = ksi.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
+            return null;
+        }
+
         /// <summary>
         /// Add a list of Knowledge States to the graph or overwrite existing, using batching to increase performance.
         /// </summary>

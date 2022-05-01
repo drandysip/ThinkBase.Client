@@ -15,10 +15,15 @@
 	<IncludeSymbols>true</IncludeSymbols>
 	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    	<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>  
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="ThinkBase.Client.StressTest\**" />
     <Compile Remove="ThinkBase.Client.Tests\**" />
+    <EmbeddedResource Remove="ThinkBase.Client.StressTest\**" />
     <EmbeddedResource Remove="ThinkBase.Client.Tests\**" />
+    <None Remove="ThinkBase.Client.StressTest\**" />
     <None Remove="ThinkBase.Client.Tests\**" />
   </ItemGroup>
 

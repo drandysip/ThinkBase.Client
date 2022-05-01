@@ -19,6 +19,7 @@ namespace ThinkBase.Client
         Task<List<KnowledgeState>> GetChildKnowledgeStatesWithAttributeValue(string parentId, string attLineage, string attValue, bool asSystem);
         Task<GraphAttribute?> GetGraphAttributeByAttName(KnowledgeState ks, string nodeName, string attName);
         Task<GraphAttribute?> GetGraphAttributeByLineage(KnowledgeState ks, string nodeName, string lineage);
+        Task<KnowledgeState?> GetInteractKnowledgeState(string conversationId);
         Task<KnowledgeState?> GetKnowledgeState(string subjectId);
         Task<List<Interaction>> Interact(string conversationId, string message);
         Task<int?> MailShot(string collateral, string subject, string sendfrom, bool test);
