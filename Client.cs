@@ -483,6 +483,29 @@ namespace ThinkBase.Client
             return reportStream.AsObservable();
         }
 
+        public IObservable<KnowledgeStateInput> SubscribeToInteractComplete(string nodeName)
+        {
+            if (_model == null)
+                FetchModel().Wait();
+            if (_model == null || !_model.ObjectsByExternalId.ContainsKey(nodeName))
+                throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
+
+            var req = new GraphQLRequest()
+            {
+                Variables = new { name = _graphName, target = _model.ObjectsByExternalId[nodeName].id },
+                Query = @"subscription ($name: String! $target: String!){interactComplete(name: $name target: $target){knowledgeGraphName created subjectId data{ name value {name type value lineage inferred confidence}}}}"
+            };
+            IObservable<GraphQLResponse<InteractCompleteResult>> subscriptionStream = client.CreateSubscriptionStream<InteractCompleteResult>(req);
+            ISubject<KnowledgeStateInput> _knowledgeStateStream = new ReplaySubject<KnowledgeStateInput>(1);
+            subscriptionStream.Subscribe(x =>
+            {
+                if(x.Data != null)
+                    _knowledgeStateStream.OnNext(x.Data.interactComplete);
+            });
+            return _knowledgeStateStream.AsObservable();
+
+        }
+
         public async Task<List<Interaction>> Interact(string conversationId, string message)
         {
             var req = new GraphQLHttpRequest() { Variables = new { name = _graphName, ksid = conversationId, text = message, messageName = "message" }, Query = @"query ($name: String! $ksid: String! $text:  String! $messageName: String!){interactKnowledgeGraph(kgModelName: $name conversationId: $ksid conversationData: { dataType: textual name: $messageName value: $text }){ darl reference response{dataType name value categories{name value }}}}" };

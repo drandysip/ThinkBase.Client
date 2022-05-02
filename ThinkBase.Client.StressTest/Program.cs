@@ -49,7 +49,7 @@ namespace ThinkBase.Client.StressTest
             }
             response = await client.Interact(conversationId, response[0].response.categories[0].name); //last question
             //fetch the KS
-            var ks = await client.GetKnowledgeState(conversationId);
+            var ks = await client.GetInteractKnowledgeState(conversationId);
         }
     }
 }

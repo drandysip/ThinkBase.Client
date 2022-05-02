@@ -17,7 +17,7 @@ namespace ThinkBase.Client.Tests
     public class BasicTests
     {
         private string _apiKey;
-        private string _path = "https://darl.dev/graphql"; 
+        private string _path = "https://localhost:44311/graphql"; 
         private string _adminApiKey;
 
         [TestInitialize()]
@@ -224,6 +224,48 @@ namespace ThinkBase.Client.Tests
                     TestInteract(),
                     TestInteract()
                     );
+        }
+
+        [TestMethod]
+        public async Task TestInteractComplete()
+        {
+            var graph = "personality_test.graph";
+            var client = new Client(_apiKey, graph, _path);
+            var res = await client.FetchModel();
+            res.Init();
+            var subs = client.SubscribeToInteractComplete("personality");
+            KnowledgeStateInput? knowledgeState = null;
+            string errorMessage;
+            subs.Subscribe(
+                a => knowledgeState = a,
+                b => errorMessage = b.Message
+                );
+            var conversationId = Guid.NewGuid().ToString();
+            var response = await client.Interact(conversationId, "What is my personality?");
+            Assert.IsNotNull(response);
+            Assert.AreEqual(response.Count(), 2);
+            Assert.IsTrue(response[0].response.dataType == DarlVarResponse.DataType.textual);
+            Assert.IsTrue(response[1].response.dataType == DarlVarResponse.DataType.categorical);
+            Assert.IsTrue(response[1].response.categories.Count == 2);
+            Assert.IsTrue(response[1].response.categories[0].name == "Yes");
+            response = await client.Interact(conversationId, "Yes");
+            for (int i = 0; i < 100; i++)
+            {
+                if (response[0].response.dataType == DarlVarResponse.DataType.categorical)
+                    response = await client.Interact(conversationId, response[0].response.categories[0].name);
+                else if (response[0].response.dataType == DarlVarResponse.DataType.numeric)
+                    response = await client.Interact(conversationId, "50");
+            }
+            response = await client.Interact(conversationId, response[0].response.categories[0].name); //last question
+            Assert.AreEqual("# Results\nIn percentiles\n\nPsychoticness: 90.15\n\nNeuroticness: 97.61\n\nExtraversion: 94.40\n\nSelf-Deception: 29.91", response[0].response.value);
+            //fetch the KS
+            var ks = await client.GetInteractKnowledgeState(conversationId);
+            Assert.IsNotNull(ks);
+            Assert.AreEqual(110, ks.data.Count);
+            Thread.Sleep(1000); //allow 1 second to run
+            Assert.IsTrue(knowledgeState != null);
+            Assert.IsTrue(knowledgeState.data.Any(a => a.value.Any(b => b.name == "completed")));
+
         }
     }
 }
