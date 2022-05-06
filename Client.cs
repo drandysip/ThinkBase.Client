@@ -410,6 +410,19 @@ namespace ThinkBase.Client
             return resp.Data.exportNoda;
         }
 
+        public async Task<string?> NodaView()
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName },
+                Query = @"query ($name: String! ){nodaView(graphName: $name)}"
+            };
+            var resp = await client.SendQueryAsync<NodaViewResponse>(req);
+            if (resp == null || (resp.Errors != null && resp.Errors.Count() > 0))
+                throw new Exception(resp?.Errors?[0].Message);
+            return resp.Data.nodaView;
+        }
+
         /// <summary>
         /// Admin only
         /// </summary>
@@ -537,6 +550,35 @@ namespace ThinkBase.Client
             if (resp.Errors != null && resp.Errors.Count() > 0)
                 throw new Exception(resp.Errors[0].Message);
             return ((JObject)resp.Data).Value<bool>("deleteKG");
+        }
+
+        public async Task<string?> RegisterForMarketing(string name, string email, string ipAddress, string longitude, string latitude)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName, email = email, ipAddress = ipAddress, longitude = longitude, latitude = latitude },
+                Query = @"query ($name: String! $email: String! $ipAddress: String! $longitude: String! $latitude: String!){registerForMarketing(name: $name email: $email ipAddress: $ipAddress longitude: $longitude latitude: $latitude )}"
+            };
+            var resp = await client.SendQueryAsync<RegisterForMarketingResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            return resp.Data.registerForMarketing;
+        }
+
+        public async Task<KnowledgeState?> DeleteKnowledgeState(string subjectId, bool asSystem = false)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName, id = subjectId, asSystem = asSystem },
+                Query = @"mutation ($name: String! $id: String! $asSystem: Boolean!){deleteKnowledgeState(name: $name subjectId: $id asSystem: $asSystem ){knowledgeGraphName subjectId created data{ name value {name type value lineage inferred confidence}}}}"
+            };
+            var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            var ksi = resp.Data.deleteKnowledgeState;
+            if (ksi != null)
+                return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = subjectId, data = ksi.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
+            return null;
         }
     }
 }

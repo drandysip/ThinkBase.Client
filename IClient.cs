@@ -13,6 +13,7 @@ namespace ThinkBase.Client
         Task<KnowledgeState?> CreateKnowledgeState(KnowledgeState ks, bool? asSystem = false, bool transient = false);
         Task<List<KnowledgeState>> CreateKnowledgeStateBatched(List<KnowledgeState> ksl, bool transient = false);
         Task<bool> DeleteKGraph();
+        Task<KnowledgeState?> DeleteKnowledgeState(string subjectId, bool asSystem = false);
         Task<String?> ExportNodaModel();
         Task<GraphModel> FetchModel(bool asSystem = false);
         Task<List<KnowledgeState>> GetChildKnowledgeStates(string parentId, bool asSystem);
@@ -23,6 +24,7 @@ namespace ThinkBase.Client
         Task<KnowledgeState?> GetKnowledgeState(string subjectId);
         Task<List<Interaction>> Interact(string conversationId, string message);
         Task<int?> MailShot(string collateral, string subject, string sendfrom, bool test);
+        Task<string?> NodaView();
         Task SetConnectionPresence(KnowledgeState ks, string nodeName, string destName, string remoteSubjectId);
         Task SetDataValue(KnowledgeState ks, string nodeName, string attName, string value);
         Task SetObjectExistence(KnowledgeState ks, string nodeName, List<DarlTime> existence);
