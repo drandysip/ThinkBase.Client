@@ -552,6 +552,19 @@ namespace ThinkBase.Client
             return ((JObject)resp.Data).Value<bool>("deleteKG");
         }
 
+        public async Task<bool> CreateKGraph()
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName },
+                Query = @"mutation ($name: String!){createKGraph(name: $name)}"
+            };
+            var resp = await client.SendQueryAsync<object>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            return ((JObject)resp.Data).Value<bool>("createKGraph");
+        }
+
         public async Task<string?> RegisterForMarketing(string name, string email, string ipAddress, string longitude, string latitude)
         {
             var req = new GraphQLHttpRequest()

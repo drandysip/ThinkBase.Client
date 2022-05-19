@@ -17,7 +17,7 @@ namespace ThinkBase.Client.Tests
     public class BasicTests
     {
         private string _apiKey;
-        private string _path = "https://darl.dev/graphql"; // "https://localhost:44311/graphql"; 
+        private string _path = "https://localhost:44311/graphql"; //"https://darl.dev/graphql"
         private string _adminApiKey;
 
         [TestInitialize()]
@@ -303,6 +303,16 @@ namespace ThinkBase.Client.Tests
             var old = await client.GetKnowledgeState(states[0].subjectId);
             Assert.IsNull(old);
 
+        }
+
+        [TestMethod]
+        public async Task TestKGraphCreateDelete()
+        {
+            var graph = "Test.graph";
+            var client = new Client(_apiKey, graph, _path);
+            Assert.IsTrue(await client.CreateKGraph());
+            var res = await client.FetchModel();
+            Assert.IsTrue(await client.DeleteKGraph());
         }
     }
 }
