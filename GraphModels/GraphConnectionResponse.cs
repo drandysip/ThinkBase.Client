@@ -8,6 +8,5 @@ namespace ThinkBase.Client.GraphModels
     {
         public GraphConnection createGraphConnection { get; set; }
 
-
     }
 }

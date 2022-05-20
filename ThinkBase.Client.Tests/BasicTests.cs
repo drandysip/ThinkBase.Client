@@ -314,5 +314,27 @@ namespace ThinkBase.Client.Tests
             var res = await client.FetchModel();
             Assert.IsTrue(await client.DeleteKGraph());
         }
+        [TestMethod]
+        public async Task TestCreateObjectsAndConnections()
+        {
+            var graph = "Test.graph";
+            var client = new Client(_apiKey, graph, _path);
+            Assert.IsTrue(await client.CreateKGraph());
+            var res = await client.FetchModel();
+            Assert.AreEqual(0, res.vertices.Count());
+            Assert.AreEqual(0, res.edges.Count());
+            var obj1 = await client.CreateGraphObject(new GraphObject { name = "obj1", externalId = "obj1", lineage = "noun:01,0,2,00,38,00,06,1" });
+            var obj2 = await client.CreateGraphObject(new GraphObject { name = "obj2", externalId = "obj2", lineage = "noun:01,0,2,00,38,00,06,1" });
+            var obj3 = await client.CreateGraphObject(new GraphObject { name = "obj3", externalId = "obj3", lineage = "noun:01,0,2,00,38,00,06,1" });
+            var obj4 = await client.CreateGraphObject(new GraphObject { name = "obj4", externalId = "obj4", lineage = "noun:01,0,2,00,38,00,06,1" });
+            var conn1 = await client.CreateGraphConnection(new GraphConnection { name = "connects to", weight = 1.0, startId = obj1.id, endId = obj2.id, lineage = "verb:360,09" });
+            var conn2 = await client.CreateGraphConnection(new GraphConnection { name = "connects to", weight = 1.0, startId = obj2.id, endId = obj3.id, lineage = "verb:360,09" });
+            var conn3 = await client.CreateGraphConnection(new GraphConnection { name = "connects to", weight = 1.0, startId = obj3.id, endId = obj4.id, lineage = "verb:360,09" });
+            var conn4 = await client.CreateGraphConnection(new GraphConnection { name = "connects to", weight = 1.0, startId = obj4.id, endId = obj1.id, lineage = "verb:360,09" });
+            res = await client.FetchModel();
+            Assert.AreEqual(4, res.vertices.Count());
+            Assert.AreEqual(4, res.edges.Count());
+            Assert.IsTrue(await client.DeleteKGraph());
+        }
     }
 }

@@ -10,6 +10,8 @@ namespace ThinkBase.Client
     public interface IClient
     {
         Task<long> ClearAllKnowledgeStates();
+        Task<GraphConnection> CreateGraphConnection(GraphConnection gc);
+        Task<GraphObject> CreateGraphObject(GraphObject go);
         Task<bool> CreateKGraph();
         Task<KnowledgeState?> CreateKnowledgeState(KnowledgeState ks, bool? asSystem = false, bool transient = false);
         Task<List<KnowledgeState>> CreateKnowledgeStateBatched(List<KnowledgeState> ksl, bool transient = false);

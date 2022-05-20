@@ -593,5 +593,82 @@ namespace ThinkBase.Client
                 return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = subjectId, data = ksi.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
             return null;
         }
+
+        public async Task<GraphObject> CreateGraphObject(GraphObject go)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName, graphObject = Convert(go) },
+                Query = @"mutation ($name: String! $graphObject: graphObjectInput!){createGraphObject(graphName: $name graphObject: $graphObject ontology: BUILD){id}}"
+            };
+            var resp = await client.SendQueryAsync<GraphObjectResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            go.id = resp.Data.createGraphObject?.id ?? "";
+            return go;
+        }
+
+        public async Task<GraphConnection> CreateGraphConnection(GraphConnection gc)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName, graphConnection = Convert(gc) },
+                Query = @"mutation ($name: String! $graphConnection: graphConnectionInput!){createGraphConnection(graphName: $name graphConnection: $graphConnection ontology: BUILD){id}}"
+            };
+            var resp = await client.SendQueryAsync<GraphConnectionResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            gc.id = resp.Data.createGraphConnection?.id ?? "";
+            return gc;
+        }
+
+        private GraphObjectInput Convert(GraphObject go)
+        {
+            var lineage = go.lineage;
+            var subLineage = string.Empty;
+            if(go.lineage.Contains('+'))
+            {
+                lineage = go.lineage.Substring(0, go.lineage.IndexOf('+'));
+                subLineage = go.lineage.Substring(go.lineage.IndexOf('+'));
+            }
+            List<GraphAttributeInput>? properties = null;
+            if(go.properties != null)
+            {
+                properties = new List<GraphAttributeInput>();
+                foreach(var p in go.properties)
+                {
+                    properties.Add(ConvertAttributeInput(p));
+                }
+            }
+            List<DarlTimeInput>? existence = null;
+            if (go.existence != null)
+            {
+                existence = new List<DarlTimeInput>();
+                foreach(var e in go.existence)
+                {
+                    existence.Add(Convert(e));
+                }
+            }
+            return new GraphObjectInput { name = go.name, lineage = lineage, externalId = go.externalId, subLineage = subLineage, properties = properties, existence = existence };
+        }
+
+        private DarlTimeInput Convert(DarlTime e)
+        {
+            return new DarlTimeInput { raw = e.raw, precision = e.precision };
+        }
+
+        private GraphConnectionInput Convert(GraphConnection gc)
+        {
+            List<DarlTimeInput>? existence = null;
+            if (gc.existence != null)
+            {
+                existence = new List<DarlTimeInput>();
+                foreach (var e in gc.existence)
+                {
+                    existence.Add(Convert(e));
+                }
+            }
+            return new GraphConnectionInput { existence = existence, name = gc.name, lineage = gc.lineage, startId = gc.startId, endId = gc.endId };
+        }
     }
 }
