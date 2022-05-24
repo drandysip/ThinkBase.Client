@@ -17,7 +17,7 @@ namespace ThinkBase.Client.Tests
     public class BasicTests
     {
         private string _apiKey;
-        private string _path = "https://localhost:44311/graphql"; //"https://darl.dev/graphql"
+        private string _path = "https://localhost:44311/graphql";//"https://darl.dev/graphql"; // "https://darlgraphql-stagng.azurewebsites.net/graphql"; // //
         private string _adminApiKey;
 
         [TestInitialize()]
@@ -29,6 +29,8 @@ namespace ThinkBase.Client.Tests
             _apiKey = configuration["apiKey"];
             _adminApiKey = configuration["adminApiKey"];
         }
+
+
 
         [TestMethod]
         public async Task TestCreateKS()
@@ -222,6 +224,8 @@ namespace ThinkBase.Client.Tests
             await Task.WhenAll(
                     TestInteract(),
                     TestInteract(),
+                    TestInteract(),
+                    TestInteract(),
                     TestInteract()
                     );
         }
@@ -334,6 +338,33 @@ namespace ThinkBase.Client.Tests
             res = await client.FetchModel();
             Assert.AreEqual(4, res.vertices.Count());
             Assert.AreEqual(4, res.edges.Count());
+            Assert.IsTrue(await client.DeleteKGraph());
+        }
+
+        [TestMethod]
+        public async Task AttributeManipulationTest()
+        {
+            var graph = "Test.graph";
+            var client = new Client(_apiKey, graph, _path);
+            Assert.IsTrue(await client.CreateKGraph());
+            var res = await client.FetchModel();
+            Assert.AreEqual(0, res.vertices.Count());
+            Assert.AreEqual(0, res.edges.Count());
+            var obj1 = await client.CreateGraphObject(new GraphObject { name = "obj1", externalId = "obj1", lineage = "noun:01,0,2,00,38,00,06,1" });
+            await client.AddAttributeByName(obj1.id, new GraphAttribute { confidence = 1.0, name = "fred", lineage = "noun:01,0,2,00,38,00,06,1", value = "poops" });
+            res = await client.FetchModel();
+            var obj2 = await client.GetObjectById(obj1.id);
+            Assert.AreEqual(1, obj2.properties.Count);
+            await client.DeleteAttributeByName(obj1.id, "fred");
+            res = await client.FetchModel();
+            obj2 = await client.GetObjectById(obj1.id);
+            Assert.AreEqual(0, obj2.properties.Count);
+            await client.AddAttributeByName(obj1.id, new GraphAttribute { confidence = 1.0, name = "fred", lineage = "noun:01,0,2,00,38,00,06,1", value = "poops" });
+            await client.AddSubAttributeByName(obj1.id, "fred", new GraphAttribute { confidence = 1.0, name = "bill", lineage = "noun:01,0,2,00,38,00,06,1", value = "poops" });
+            res = await client.FetchModel();
+            obj2 = await client.GetObjectById(obj1.id);
+            Assert.AreEqual(1, obj2.properties.Count);
+            Assert.AreEqual(1, obj2.properties[0].properties.Count);
             Assert.IsTrue(await client.DeleteKGraph());
         }
     }

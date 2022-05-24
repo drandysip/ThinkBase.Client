@@ -15,6 +15,7 @@ namespace ThinkBase.Client.GraphModels
         public string subLineage { get; set; } = String.Empty;
         public List<DarlTime>? existence { get; set; }//existence
         public bool? inferred { get; set; }
+        public List<GraphAttributeInput>? properties { get; set; }
 
     }
 }

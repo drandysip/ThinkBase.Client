@@ -63,7 +63,7 @@ namespace ThinkBase.Client
                 var modelReq = new GraphQLHttpRequest
                 {
                     Variables = new { name = _graphName, ass = asSystem },
-                    Query = "query ($name: String! $ass: Boolean){kGraphByName(name: $name asSystem: $ass){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value type existence {raw precision } } existence {raw precision }}} edges {name value{lineage endId startId name inferred weight id existence {raw precision }}}}}}"
+                    Query = "query ($name: String! $ass: Boolean){kGraphByName(name: $name asSystem: $ass){name model{vertices{name value{lineage subLineage id externalId properties{lineage name value type existence {raw precision } properties{lineage name value type existence {raw precision } }} existence {raw precision }}} edges {name value{lineage endId startId name inferred weight id existence {raw precision }}}}}}"
                 };
                 model = await client.SendQueryAsync<KGraphResponse>(modelReq);
             }
@@ -389,7 +389,13 @@ namespace ThinkBase.Client
 
         public static GraphAttributeInput ConvertAttributeInput(GraphAttribute a)
         {
-            return new GraphAttributeInput { confidence = a.confidence, inferred = a.inferred, value = a.value ?? "", existence = a.existence, name = a.name, type = a.type, lineage = a.lineage };
+            List<GraphAttributeInput>? properties = null;
+            if(a.properties != null)
+            {
+                properties = new List<GraphAttributeInput>();
+                foreach(var b in a.properties) { properties.Add(ConvertAttributeInput(b)); }
+            }
+            return new GraphAttributeInput { confidence = a.confidence, inferred = a.inferred, value = a.value ?? "", existence = a.existence, name = a.name, type = a.type, lineage = a.lineage, properties = properties };
         }
 
         public override string ToString()
@@ -539,6 +545,15 @@ namespace ThinkBase.Client
             return _model.ObjectsByExternalId[name].id;
         }
 
+        public async Task<GraphObject> GetObjectById(string objectId)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (_model == null || !_model.Objects.ContainsKey(objectId))
+                throw new ArgumentOutOfRangeException($"{objectId} not found in {_graphName}");
+            return _model.Objects[objectId];
+        }
+
         public async Task<bool> DeleteKGraph()
         {
             var req = new GraphQLHttpRequest()
@@ -605,6 +620,8 @@ namespace ThinkBase.Client
             if (resp.Errors != null && resp.Errors.Count() > 0)
                 throw new Exception(resp.Errors[0].Message);
             go.id = resp.Data.createGraphObject?.id ?? "";
+            _model?.vertices?.Add(new StringGraphObjectPair { name = go.id, value = go });
+            _model?.Init();
             return go;
         }
 
@@ -620,6 +637,68 @@ namespace ThinkBase.Client
                 throw new Exception(resp.Errors[0].Message);
             gc.id = resp.Data.createGraphConnection?.id ?? "";
             return gc;
+        }
+
+        public async Task<bool> DeleteAttributeByName(string ObjectId, string AttName)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (_model == null || !_model.Objects.ContainsKey(ObjectId))
+                throw new ArgumentOutOfRangeException($"{ObjectId} not found in {_graphName}");
+            var obj = _model.Objects[ObjectId];
+            if (obj.properties == null)
+                return false;
+            obj.properties.RemoveAll(x => x.name == AttName);
+            return await UpdateGraphObject(obj); throw new NotImplementedException();
+        }
+
+        public async Task<bool> AddAttributeByName(string ObjectId, GraphAttribute att)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (_model == null || !_model.Objects.ContainsKey(ObjectId))
+                throw new ArgumentOutOfRangeException($"{ObjectId} not found in {_graphName}");
+            var obj = _model.Objects[ObjectId];
+            if (obj.properties == null)
+                obj.properties = new List<GraphAttribute>();
+            obj.properties.Add(att);
+            return await UpdateGraphObject(obj);
+        }
+
+        public async Task<bool> AddSubAttributeByName(string ObjectId, string AttName, GraphAttribute subAtt)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (_model == null || !_model.Objects.ContainsKey(ObjectId))
+                throw new ArgumentOutOfRangeException($"{ObjectId} not found in {_graphName}");
+            var obj = _model.Objects[ObjectId];
+            if (obj.properties == null)
+                return false;
+            if (!obj.properties.Any(a => a.name == AttName))
+                return false;
+            var att = obj.properties.First(a => a.name == AttName);
+            if (att.properties == null)
+                att.properties = new List<GraphAttribute>();
+            att.properties.Add(subAtt);
+            return await UpdateGraphObject(obj);
+        }
+
+        public async Task<bool> DeleteSubAttributeByName(string ObjectId, string AttName, string subAttName)
+        {
+            if (_model == null)
+                await FetchModel();
+            if (_model == null || !_model.Objects.ContainsKey(ObjectId))
+                throw new ArgumentOutOfRangeException($"{ObjectId} not found in {_graphName}");
+            var obj = _model.Objects[ObjectId];
+            if (obj.properties == null)
+                return false;
+            if (!obj.properties.Any(a => a.name == AttName))
+                return false;
+            var att = obj.properties.First(a => a.name == AttName);
+            if (att.properties == null)
+                return false;
+            att.properties.RemoveAll(a => a.name == subAttName);
+            return await UpdateGraphObject(obj);
         }
 
         private GraphObjectInput Convert(GraphObject go)
@@ -652,6 +731,36 @@ namespace ThinkBase.Client
             return new GraphObjectInput { name = go.name, lineage = lineage, externalId = go.externalId, subLineage = subLineage, properties = properties, existence = existence };
         }
 
+        private GraphObjectUpdate ConvertU(GraphObject go)
+        {
+            var lineage = go.lineage;
+            var subLineage = string.Empty;
+            if (go.lineage.Contains('+'))
+            {
+                lineage = go.lineage.Substring(0, go.lineage.IndexOf('+'));
+                subLineage = go.lineage.Substring(go.lineage.IndexOf('+'));
+            }
+            List<GraphAttributeInput>? properties = null;
+            if (go.properties != null)
+            {
+                properties = new List<GraphAttributeInput>();
+                foreach (var p in go.properties)
+                {
+                    properties.Add(ConvertAttributeInput(p));
+                }
+            }
+            List<DarlTimeInput>? existence = null;
+            if (go.existence != null)
+            {
+                existence = new List<DarlTimeInput>();
+                foreach (var e in go.existence)
+                {
+                    existence.Add(Convert(e));
+                }
+            }
+            return new GraphObjectUpdate { name = go.name, lineage = lineage, externalId = go.externalId, subLineage = subLineage, properties = properties, existence = existence, id = go.id };
+        }
+
         private DarlTimeInput Convert(DarlTime e)
         {
             return new DarlTimeInput { raw = e.raw, precision = e.precision };
@@ -669,6 +778,22 @@ namespace ThinkBase.Client
                 }
             }
             return new GraphConnectionInput { existence = existence, name = gc.name, lineage = gc.lineage, startId = gc.startId, endId = gc.endId };
+        }
+
+
+
+        private async Task<bool> UpdateGraphObject(GraphObject obj)
+        {
+            var req = new GraphQLHttpRequest()
+            {
+                Variables = new { name = _graphName, graphObject = ConvertU(obj) },
+                Query = @"mutation ($name: String! $graphObject: graphObjectUpdate!){updateGraphObject(graphName: $name graphObject: $graphObject ontology: BUILD){id}}"
+            };
+            var resp = await client.SendQueryAsync<GraphObjectResponse>(req);
+            if (resp.Errors != null && resp.Errors.Count() > 0)
+                throw new Exception(resp.Errors[0].Message);
+            var id = resp.Data.updateGraphObject?.id ?? "";
+            return !string.IsNullOrEmpty(id);
         }
     }
 }

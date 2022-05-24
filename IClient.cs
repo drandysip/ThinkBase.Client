@@ -33,5 +33,9 @@ namespace ThinkBase.Client
         Task SetObjectExistence(KnowledgeState ks, string nodeName, List<DarlTime> existence);
         IObservable<DarlMineReport> SubscribeToBuild(string name, string? data, string? patternPath, List<DataMap> dataMaps);
         Task<IObservable<KnowledgeStateInput>> SubscribeToSeek(string nodeName);
+        Task<bool> DeleteAttributeByName(string ObjectName, string AttName);
+        Task<bool> AddAttributeByName(string ObjectName, GraphAttribute att);
+        Task<bool> AddSubAttributeByName(string ObjectName, string AttName, GraphAttribute subAtt);
+        Task<bool> DeleteSubAttributeByName(string ObjectName, string AttName, string subAttName);
     }
 }
