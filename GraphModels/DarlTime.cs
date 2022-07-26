@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ThinkBase.Client.GraphModels
 {
@@ -38,7 +36,7 @@ namespace ThinkBase.Client.GraphModels
         {
             if (raw >= 0)
             {
-                DateTime dateTime =  raw > 0.0 ? yearZero + TimeSpan.FromSeconds((double)this.raw) : DateTime.MinValue;
+                DateTime dateTime = raw > 0.0 ? yearZero + TimeSpan.FromSeconds((double)this.raw) : DateTime.MinValue;
                 return dateTime.ToString();
             }
             else

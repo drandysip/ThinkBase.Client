@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace ThinkBase.Client.GraphModels
 {
@@ -13,7 +9,7 @@ namespace ThinkBase.Client.GraphModels
         public string? subLineage { get; set; }
         public string name { get; set; } = "";
         public string externalId { get; set; } = "";
-        public List<GraphAttributeInput>? properties {get; set;}
+        public List<GraphAttributeInput>? properties { get; set; }
     }
 }
 

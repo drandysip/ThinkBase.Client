@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ThinkBase.Client.GraphModels;
 
@@ -37,5 +35,7 @@ namespace ThinkBase.Client
         Task<bool> AddAttributeByName(string ObjectName, GraphAttribute att);
         Task<bool> AddSubAttributeByName(string ObjectName, string AttName, GraphAttribute subAtt);
         Task<bool> DeleteSubAttributeByName(string ObjectName, string AttName, string subAttName);
+        Task<byte[]> DownloadGraph();
+        Task<string> UploadGraph(byte[] content);
     }
 }

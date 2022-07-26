@@ -9,11 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Cocomo_II.graph" />
     <None Remove="email_template.html" />
     <None Remove="iris_data.xml" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Cocomo_II.graph" />
     <EmbeddedResource Include="email_template.html" />
     <EmbeddedResource Include="iris_data.xml" />
   </ItemGroup>

@@ -2,7 +2,7 @@
 
 namespace ThinkBase.Client.GraphModels
 {
-    public  class InteractResponse
+    public class InteractResponse
     {
         public List<Interaction> interactKnowledgeGraph { get; set; }
 

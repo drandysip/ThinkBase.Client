@@ -6,10 +6,12 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Threading.Tasks;
 using ThinkBase.Client.GraphModels;
 
@@ -18,6 +20,7 @@ namespace ThinkBase.Client
     public class Client : IClient
     {
         private string _graphName;
+        private string _path;
         private GraphQLHttpClient client;
         private GraphModel? _model;
         private int batchLength { get; set; } = 10;
@@ -48,6 +51,7 @@ namespace ThinkBase.Client
                 }
             }
             _graphName = graphName;
+            _path = path;
         }
 
 
@@ -67,15 +71,15 @@ namespace ThinkBase.Client
                 };
                 model = await client.SendQueryAsync<KGraphResponse>(modelReq);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception($"FetchModel failed. Message: {ex.Message}");
             }
-            if (model == null) 
+            if (model == null)
                 throw new Exception("SendQueryAsync returned null.");
             if (model.Errors != null && model.Errors.Count() > 0)
                 throw new Exception(model.Errors[0].Message);
-            if(model.Data.kGraphByName == null)
+            if (model.Data.kGraphByName == null)
                 throw new Exception($"{_graphName} is not present in this account.");
             _model = model.Data.kGraphByName.model ?? new GraphModel();
             _model.Init();
@@ -92,8 +96,8 @@ namespace ThinkBase.Client
             var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
             if (resp.Errors != null && resp.Errors.Count() > 0)
                 throw new Exception(resp.Errors[0].Message);
-            var ksi =  resp.Data.getKnowledgeState;
-            if(ksi != null)
+            var ksi = resp.Data.getKnowledgeState;
+            if (ksi != null)
                 return new KnowledgeState { knowledgeGraphName = _graphName, subjectId = subjectId, data = ksi.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) };
             return null;
         }
@@ -119,7 +123,7 @@ namespace ThinkBase.Client
             var list = new List<KnowledgeState>();
             if (ksi != null)
             {
-                foreach(var k in ksi)
+                foreach (var k in ksi)
                 {
                     list.Add(new KnowledgeState { knowledgeGraphName = _graphName, subjectId = k.subjectId, data = k.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) });
                 }
@@ -160,7 +164,7 @@ namespace ThinkBase.Client
         /// <returns>The Knowledge State Added</returns>
         public async Task<KnowledgeState?> CreateKnowledgeState(KnowledgeState ks, bool? asSystem, bool transient = false)
         {
-            var ksi = ConvertKnowledgeState(ks,transient);
+            var ksi = ConvertKnowledgeState(ks, transient);
             GraphQLHttpRequest req;
             if (asSystem ?? false)
             {
@@ -215,11 +219,11 @@ namespace ThinkBase.Client
             int index = 0;
             var ksis = new List<KnowledgeStateInput>();
             var results = new List<KnowledgeState>();
-            while(!complete)
+            while (!complete)
             {
-                for(int n = 0; n < batchLength && n + index < ksl.Count; n++)
+                for (int n = 0; n < batchLength && n + index < ksl.Count; n++)
                 {
-                    ksis.Add(ConvertKnowledgeState(ksl[n + index],transient));
+                    ksis.Add(ConvertKnowledgeState(ksl[n + index], transient));
                 }
                 var req = new GraphQLHttpRequest()
                 {
@@ -229,7 +233,7 @@ namespace ThinkBase.Client
                 var resp = await client.SendQueryAsync<KnowledgeStateResponse>(req);
                 if (resp.Errors != null && resp.Errors.Count() > 0)
                     throw new Exception(resp.Errors[0].Message);
-                foreach(var r in resp.Data.createKnowledgeStateList)
+                foreach (var r in resp.Data.createKnowledgeStateList)
                 {
                     results.Add(new KnowledgeState { knowledgeGraphName = _graphName, subjectId = r.subjectId, data = r.data.ToDictionary(a => a.name, b => ConvertAttributeInputList(b.value)) });
                 }
@@ -268,7 +272,7 @@ namespace ThinkBase.Client
             {
                 if (l.name == attName)
                 {
-                    if(!ks.data.ContainsKey(obj.id))
+                    if (!ks.data.ContainsKey(obj.id))
                     {
                         ks.data.Add(obj.id, new List<GraphAttribute>());
                     }
@@ -298,7 +302,7 @@ namespace ThinkBase.Client
             if (_model == null || !_model.ObjectsByExternalId.ContainsKey(nodeName))
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
             var obj = _model.ObjectsByExternalId[nodeName];
-            if(ks.data.ContainsKey(obj.id))
+            if (ks.data.ContainsKey(obj.id))
             {
                 return ks.data[obj.id].FirstOrDefault(a => a.lineage.StartsWith(lineage));
             }
@@ -327,10 +331,10 @@ namespace ThinkBase.Client
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
             ks.knowledgeGraphName = _graphName;
             var obj = _model.ObjectsByExternalId[nodeName];
-            if(obj == null)
+            if (obj == null)
                 throw new ArgumentOutOfRangeException($"{nodeName} not found in {_graphName}");
             var att = obj.properties?.FirstOrDefault(a => a.name == "existence");
-            if(att != null)
+            if (att != null)
             {
                 att.existence = existence;
             }
@@ -352,7 +356,7 @@ namespace ThinkBase.Client
             ks.knowledgeGraphName = _graphName;
             var obj = _model.ObjectsByExternalId[nodeName];
             var link = _model.Connections.Values.FirstOrDefault(a => a.startId == obj.id && a.inferred && a.endId == remoteId);
-            if(link != null)
+            if (link != null)
             {
                 if (!ks.data.ContainsKey(link.id))
                 {
@@ -363,6 +367,58 @@ namespace ThinkBase.Client
             else
             {
                 throw new ThinkBaseException($"Connection from {nodeName} to {destName} not found. Schema change?");
+            }
+        }
+
+        public async Task<byte[]> DownloadGraph()
+        {
+            try
+            {
+                var modelReq = new GraphQLHttpRequest
+                {
+                    Variables = new { name = _graphName },
+                    Query = "query ($name: String! ){kGContents(graphName: $name)}"
+                };
+                var data = await client.SendQueryAsync<KGraphResponse>(modelReq);
+                if (data.Errors != null && data.Errors.Count() > 0)
+                    throw new Exception(data.Errors[0].Message);
+                return data.Data.KGContents;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"DownloadGraph failed. Message: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> TempKGExists()
+        {
+            var modelReq = new GraphQLHttpRequest
+            {
+                Variables = new { name = _graphName },
+                Query = "query ($name: String! ){tempKGExists(graphName: $name)}"
+            };
+            var data = await client.SendQueryAsync<KGraphResponse>(modelReq);
+            if (data.Errors != null && data.Errors.Count() > 0)
+                throw new Exception(data.Errors[0].Message);
+            return data.Data.tempKGExists;
+        }
+
+        public async Task<string> UploadGraph(byte[] content )
+        {
+            using (var multipartFormContent = new MultipartFormDataContent())
+            {
+                //Add the file as a byte array
+                var byteContent = new ByteArrayContent(content);
+                byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                multipartFormContent.Add(byteContent, name: "file", fileName: _graphName);
+                //Send it
+                //remove "graphql" from path and add "upload".
+                var uploadPath = _path.Substring(0, _path.Length - "graphql".Length) + "upload";
+                var response = await client.HttpClient.PostAsync(uploadPath, multipartFormContent);
+                if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+                    return "Not a valid Graph.";
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadAsStringAsync();
             }
         }
 
@@ -390,10 +446,10 @@ namespace ThinkBase.Client
         public static GraphAttributeInput ConvertAttributeInput(GraphAttribute a)
         {
             List<GraphAttributeInput>? properties = null;
-            if(a.properties != null)
+            if (a.properties != null)
             {
                 properties = new List<GraphAttributeInput>();
-                foreach(var b in a.properties) { properties.Add(ConvertAttributeInput(b)); }
+                foreach (var b in a.properties) { properties.Add(ConvertAttributeInput(b)); }
             }
             return new GraphAttributeInput { confidence = a.confidence, inferred = a.inferred, value = a.value ?? "", existence = a.existence, name = a.name, type = a.type, lineage = a.lineage, properties = properties };
         }
@@ -407,7 +463,7 @@ namespace ThinkBase.Client
         {
             var req = new GraphQLHttpRequest()
             {
-                Variables = new { name = _graphName},
+                Variables = new { name = _graphName },
                 Query = @"query ($name: String! ){exportNoda(graphName: $name)}"
             };
             var resp = await client.SendQueryAsync<ExportNodaResponse>(req);
@@ -479,14 +535,14 @@ namespace ThinkBase.Client
             };
             IObservable<GraphQLResponse<GraphChangedResult>> subscriptionStream = client.CreateSubscriptionStream<GraphChangedResult>(req);
             ISubject<KnowledgeStateInput> _knowledgeStateStream = new ReplaySubject<KnowledgeStateInput>(1);
-            subscriptionStream.Subscribe( x =>
-            {               
+            subscriptionStream.Subscribe(x =>
+            {
                 _knowledgeStateStream.OnNext(x.Data.graphChanged);
             });
             return _knowledgeStateStream.AsObservable();
         }
 
-        public IObservable<DarlMineReport> SubscribeToBuild(string name, string? data, string? patternPath, List<DataMap> dataMaps )
+        public IObservable<DarlMineReport> SubscribeToBuild(string name, string? data, string? patternPath, List<DataMap> dataMaps)
         {
             var req = new GraphQLRequest()
             {
@@ -518,7 +574,7 @@ namespace ThinkBase.Client
             ISubject<KnowledgeStateInput> _knowledgeStateStream = new ReplaySubject<KnowledgeStateInput>(1);
             subscriptionStream.Subscribe(x =>
             {
-                if(x.Data != null)
+                if (x.Data != null)
                     _knowledgeStateStream.OnNext(x.Data.interactComplete);
             });
             return _knowledgeStateStream.AsObservable();
@@ -705,16 +761,16 @@ namespace ThinkBase.Client
         {
             var lineage = go.lineage;
             var subLineage = string.Empty;
-            if(go.lineage.Contains('+'))
+            if (go.lineage.Contains('+'))
             {
                 lineage = go.lineage.Substring(0, go.lineage.IndexOf('+'));
                 subLineage = go.lineage.Substring(go.lineage.IndexOf('+'));
             }
             List<GraphAttributeInput>? properties = null;
-            if(go.properties != null)
+            if (go.properties != null)
             {
                 properties = new List<GraphAttributeInput>();
-                foreach(var p in go.properties)
+                foreach (var p in go.properties)
                 {
                     properties.Add(ConvertAttributeInput(p));
                 }
@@ -723,7 +779,7 @@ namespace ThinkBase.Client
             if (go.existence != null)
             {
                 existence = new List<DarlTimeInput>();
-                foreach(var e in go.existence)
+                foreach (var e in go.existence)
                 {
                     existence.Add(Convert(e));
                 }
