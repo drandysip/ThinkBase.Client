@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Company>ThinkBase LLC</Company>
     <Copyright>(c) ThinkBase LLC 2022</Copyright>
     <Description>A simple client for the Darl.dev GraphQL interface that permits you to access ThinkBase models programmatically.</Description>

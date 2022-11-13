@@ -170,19 +170,19 @@ namespace ThinkBase.Client.Tests
             res.Init();
             var conversationId = Guid.NewGuid().ToString();
             var response = await client.Interact(conversationId, "What is my personality?");
-            Assert.IsNotNull(response);
-            Assert.AreEqual(response.Count(), 2);
-            Assert.IsTrue(response[0].response.dataType == DarlVarResponse.DataType.textual);
-            Assert.IsTrue(response[1].response.dataType == DarlVarResponse.DataType.numeric);
-            response = await client.Interact(conversationId, "50");
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 102; i++)
             {
-                if(response[0].response.dataType == DarlVarResponse.DataType.categorical)
-                    response = await client.Interact(conversationId, response[0].response.categories[0].name);
-                else if(response[0].response.dataType == DarlVarResponse.DataType.numeric)
+                var r = response.Last().response;
+                if (r.dataType == DarlVarResponse.DataType.categorical)
+                    response = await client.Interact(conversationId, r.categories[0].name);
+                else if(r.dataType == DarlVarResponse.DataType.numeric)
                     response = await client.Interact(conversationId, "50");
+                if(i == 100)
+                {
+
+                }
             }
-            Assert.AreEqual("# Results\nIn percentiles\n\nPsychoticness: 90.15\n\nNeuroticness: 61.76\n\nExtraversion: 94.40\n\nSelf-Deception: 29.91", response[0].response.value);
+            Assert.AreEqual("# Results\nIn percentiles\n\nPsychoticness: 90.15\n\nNeuroticness: 61.76\n\nExtraversion: 94.40\n\nSelf-Deception: 29.91", response.Last().response.value);
             //fetch the KS
             var ks = await client.GetInteractKnowledgeState(conversationId);
             Assert.IsNotNull(ks);
@@ -398,6 +398,75 @@ namespace ThinkBase.Client.Tests
             var bytes = reader.ReadBytes((int)reader.BaseStream.Length);
             var r = await client.UploadGraph(bytes);
             Assert.AreEqual("Not a valid Graph.", r);
+        }
+
+        [TestMethod]
+        public async Task TestAITriage()
+        {
+            var graph = "ai_triage.graph";
+            var client = new Client(_apiKey, graph, _path);
+            var res = await client.FetchModel();
+            res.Init();
+            var conversationId = Guid.NewGuid().ToString();
+            var response = await client.Interact(conversationId, "machine learning");
+            var r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            Assert.IsTrue(response.First().response.value.StartsWith("The problem you described doesn’t seem to fall into any of the categories we’ve set so far."));
+            conversationId = Guid.NewGuid().ToString();
+            response = await client.Interact(conversationId, "machine learning");
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            Assert.IsTrue(response.First().response.value.StartsWith("The problem you have described may be amenable to soft computing techniques."));
+            conversationId = Guid.NewGuid().ToString();
+            response = await client.Interact(conversationId, "machine learning");
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            Assert.IsTrue(response.First().response.value.StartsWith("The problem you described doesn’t seem to fall into any of the categories we’ve set so far."));
+            conversationId = Guid.NewGuid().ToString();
+            response = await client.Interact(conversationId, "machine learning");
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.Last().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            r = response.Last().response;
+            response = await client.Interact(conversationId, r.categories.First().name);
+            Assert.IsTrue(response.First().response.value.StartsWith("The problem you described doesn’t seem to fall into any of the categories we’ve set so far."));
         }
     }
 }
